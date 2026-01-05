@@ -22,7 +22,7 @@ WIP project to visualize strava data using open source tooling
 - Transform → [dbt](https://github.com/dbt-labs/dbt-core)
 - BI → [evidence](https://github.com/evidence-dev/evidence)
 
-👋 Find me on &nbsp;<a href="https://www.strava.com/athletes/4901617"><img src="https://upload.wikimedia.org/wikipedia/commons/c/cb/Strava_Logo.svg" alt="Strava" style="height: 1em; max-height: 1.2em"/></a>
+👋 Find me on &nbsp;<a href="https://www.strava.com/athletes/109689753"><img src="https://upload.wikimedia.org/wikipedia/commons/c/cb/Strava_Logo.svg" alt="Strava" style="height: 1em; max-height: 1.2em"/></a>
 
 ## Setup
 Install required dependencies:
