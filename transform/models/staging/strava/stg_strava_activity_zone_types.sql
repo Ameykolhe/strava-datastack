@@ -9,7 +9,7 @@ with source as (
         , _activities_id as activity_id
         , _dlt_id as zone_type_id
         , type as zone_type
-        , score
+        , cast(null as double) as score -- Column not present in source
         , sensor_based as is_sensor_based
         , coalesce(custom_zones, false) as has_custom_zone_set        
         , _dlt_id

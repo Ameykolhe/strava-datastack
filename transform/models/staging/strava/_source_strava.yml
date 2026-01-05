@@ -2,7 +2,7 @@ sources:
   - name: strava
     description: Raw strava data loaded by by dlt
     database: strava_datastack
-    schema: strava
+    schema: strava_raw
     tables:
       - name: activities
         description: One row per strava activity recorded

@@ -7,6 +7,8 @@
   - [Strava Auth](#strava-auth)
 - [Usage](##use)
   - [`dlt`](#dlt)
+  - [`dbt`](#dbt)
+  - [`evidence`](#evidence)
 
 ## Overview
 WIP project to visualize strava data using open source tooling
@@ -150,4 +152,52 @@ _last_extracted_at: 2024-12-16 05:00:59.894989+00:00
 _last_extracted_hash: QeJ5iEmeeGmB3zs5XxaM1oRvcARLpgsmifRxmxj84Og=
 ```
 
- 
+### `dbt`
+The dbt project transforms raw Strava data from dlt into cleaned, modeled tables.
+
+#### Running dbt transformations
+To build the dbt models:
+```bash
+cd transform
+DUCKDB_PATH=../strava_datastack.duckdb dbt run
+```
+
+This will create transformed tables in the `dbt_sandbox` schema, including:
+- `fct_activities` - Main fact table with all activity metrics (distances, speeds, elevation, etc.)
+- `stg_strava_activities` - Staging view with cleaned activity data
+- `int_activity_streams` - Intermediate model for activity stream data
+- Additional models for zones and data points
+
+### `evidence`
+The Evidence project provides interactive visualizations and dashboards for your Strava data, using the transformed dbt models.
+
+#### Running Evidence locally
+To start the Evidence development server:
+```bash
+cd visualize
+npm run dev
+```
+
+This will start a local web server (typically at `http://localhost:3000`) where you can view your Strava dashboards.
+
+#### Available Dashboards
+- **Home Dashboard** (`/`) - Overview of all activities with key statistics and trends
+- **Activity Explorer** (`/activities`) - Detailed view of individual activities with filtering capabilities
+- **Performance Metrics** (`/performance`) - Personal records, achievements, power metrics, and heart rate zones
+
+#### Evidence Configuration
+The Evidence project is configured to connect to the DuckDB database at `strava_datastack.duckdb` in the project root. The connection configuration can be found in `visualize/sources/strava/connection.yaml`.
+
+SQL queries for the visualizations are located in `visualize/sources/strava/` and query the dbt-transformed models in the `dbt_sandbox` schema:
+- `activities_overview.sql` - Recent activities from `fct_activities`
+- `activity_stats.sql` - Overall statistics aggregated from `fct_activities`
+- `activity_by_type.sql` - Breakdown by sport type from `fct_activities`
+- `monthly_trends.sql` - Activity trends over time from `fct_activities`
+
+#### Data Flow
+The complete data pipeline follows this flow:
+1. **DLT** extracts data from Strava API and loads it into `strava_raw` schema
+2. **DBT** transforms the raw data into cleaned models in `dbt_sandbox` schema
+3. **Evidence** visualizes the transformed dbt models in interactive dashboards
+
+

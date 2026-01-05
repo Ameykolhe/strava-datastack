@@ -1,56 +1,109 @@
 ---
-title: Welcome to Evidence
+title: Strava Activity Dashboard
 ---
 
-<Details title='How to edit this page'>
+# Strava Activity Dashboard
 
-  This page can be found in your project at `/pages/index.md`. Make a change to the markdown file and save it to see the change take effect in your browser.
-</Details>
+## Overall Statistics
 
-```sql categories
-  select
-      category
-  from needful_things.orders
-  group by category
+```sql stats
+select * from strava.activity_stats
 ```
 
-<Dropdown data={categories} name=category value=category>
-    <DropdownOption value="%" valueLabel="All Categories"/>
-</Dropdown>
+<Grid cols=4>
+    <BigValue
+        data={stats}
+        value=total_activities
+        title="Total Activities"
+    />
+    <BigValue
+        data={stats}
+        value=total_distance_km
+        fmt='#,##0.0'
+        title="Total Distance (km)"
+    />
+    <BigValue
+        data={stats}
+        value=total_moving_hours
+        fmt='#,##0.0'
+        title="Total Moving Hours"
+    />
+    <BigValue
+        data={stats}
+        value=total_kudos
+        fmt='#,##0'
+        title="Total Kudos"
+    />
+</Grid>
 
-<Dropdown name=year>
-    <DropdownOption value=% valueLabel="All Years"/>
-    <DropdownOption value=2019/>
-    <DropdownOption value=2020/>
-    <DropdownOption value=2021/>
-</Dropdown>
+## Activity Breakdown by Type
 
-```sql orders_by_category
-  select 
-      date_trunc('month', order_datetime) as month,
-      sum(sales) as sales_usd,
-      category
-  from needful_things.orders
-  where category like '${inputs.category.value}'
-  and date_part('year', order_datetime) like '${inputs.year.value}'
-  group by all
-  order by sales_usd desc
+```sql by_type
+select * from strava.activity_by_type
 ```
 
-<BarChart
-    data={orders_by_category}
-    title="Sales by Month, {inputs.category.label}"
+<Grid cols=2>
+    <BarChart
+        data={by_type}
+        title="Activities by Sport Type"
+        x=sport_type
+        y=activity_count
+    />
+    <BarChart
+        data={by_type}
+        title="Total Distance by Sport Type (km)"
+        x=sport_type
+        y=total_distance_km
+    />
+</Grid>
+
+## Monthly Activity Trends
+
+```sql monthly
+select * from strava.monthly_trends
+```
+
+<LineChart
+    data={monthly}
+    title="Monthly Activity Count by Sport"
     x=month
-    y=sales_usd
-    series=category
+    y=activity_count
+    series=sport_type
 />
 
-## What's Next?
-- [Connect your data sources](settings)
-- Edit/add markdown files in the `pages` folder
-- Deploy your project with [Evidence Cloud](https://evidence.dev/cloud)
+<LineChart
+    data={monthly}
+    title="Monthly Distance (km) by Sport"
+    x=month
+    y=total_distance_km
+    series=sport_type
+/>
 
-## Get Support
-- Message us on [Slack](https://slack.evidence.dev/)
-- Read the [Docs](https://docs.evidence.dev/)
-- Open an issue on [Github](https://github.com/evidence-dev/evidence)
+## Recent Activities
+
+```sql recent
+select
+    name,
+    sport_type,
+    start_date_local,
+    distance_km,
+    moving_time_minutes,
+    elevation_gain_meters,
+    avg_speed_kmh,
+    average_heartrate,
+    kudos_count
+from strava.activities_overview
+limit 20
+```
+
+<DataTable data={recent}>
+    <Column id=name/>
+    <Column id=sport_type/>
+    <Column id=start_date_local fmt='yyyy-MM-dd HH:mm'/>
+    <Column id=distance_km fmt='#,##0.00'/>
+    <Column id=moving_time_minutes fmt='#,##0.0'/>
+    <Column id=elevation_gain_meters fmt='#,##0'/>
+    <Column id=avg_speed_kmh fmt='#,##0.0'/>
+    <Column id=average_heartrate fmt='#,##0'/>
+    <Column id=kudos_count/>
+</DataTable>

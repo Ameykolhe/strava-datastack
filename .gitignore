@@ -31,3 +31,9 @@ transform/logs/
 .DS_Store
 
 .idea
+
+# ignore evidence
+visualize/node_modules/
+visualize/.evidence/template/
+visualize/.svelte-kit/
+visualize/build/

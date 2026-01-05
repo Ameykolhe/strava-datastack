@@ -14,8 +14,8 @@ with source as (
         , athlete__resource_state as athlete_resource_state
         , athlete_count
         -- , average_cadence as cadence_avg -- Column not present in source
-        , average_heartrate as hr_avg
-        , max_heartrate as hr_max
+        , cast(null as double) as hr_avg -- Column not present in source
+        , cast(null as double) as hr_max -- Column not present in source
         /* Convert m/s to mph */
         , average_speed * (1/1609.344) * 3600 as speed_avg
         , max_speed * (1/1609.344) * 3600 as speed_max
