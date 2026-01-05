@@ -1,0 +1,4 @@
+name: strava
+type: duckdb
+options:
+  filename: ../../strava_datastack.duckdb
