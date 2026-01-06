@@ -1,0 +1,14 @@
+[project]
+name = "strava-transform"
+version = "1.0.0"
+description = "dbt transformations for Strava activity data"
+requires-python = ">=3.11"
+dependencies = [
+    # Transform dependencies
+    "dbt-core>=1.9.1",
+    "dbt-duckdb>=1.9.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

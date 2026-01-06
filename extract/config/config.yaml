@@ -1,0 +1,41 @@
+# Strava Extract Pipeline Configuration
+
+# API Configuration
+api:
+  base_url: "https://www.strava.com/api/v3/"
+  version: "v3"
+  timeout_seconds: 30
+  retry_attempts: 3
+  retry_backoff_factor: 2.0
+
+# Rate Limiting Configuration
+rate_limiting:
+  max_requests: 95  # Strava allows 100/15min, using 95 for safety margin
+  period_minutes: 15
+  enable_rate_limiter: true
+  show_progress_bar: true
+
+# Pagination Configuration
+pagination:
+  default_page_size: 200
+  max_page_size: 200
+  base_page: 1
+
+# DLT Pipeline Configuration
+pipeline:
+  name: "strava_datastack"
+  destination: "duckdb"
+  dataset_name: "strava_raw"
+  progress: "log"  # Options: log, enlighten, alive_progress
+
+# Incremental Loading Configuration
+incremental:
+  default_lookback_days: 30
+  cursor_field: "start_date"
+
+# Logging Configuration
+logging:
+  level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "text"  # Options: json (structured), text (human-readable)
+  log_file: null  # Optional: specify path for file logging, null for stdout only
+  include_trace_id: true

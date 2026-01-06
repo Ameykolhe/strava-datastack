@@ -16,14 +16,21 @@ with source as (
         end as stream_type
         , type as stream_type_raw
         , data as stream_json
-        , from_json(data, '["int"]') as stream_list
+        , case
+            when type = 'latlng' then null
+            else from_json(data, '["int"]')
+        end as stream_list
+        , case
+            when type = 'latlng' then cast(json_extract(data, '$') as double[][])
+            else null
+        end as latlng_list
         , series_type
         , original_size
         , resolution
 
         , _dlt_id
         , _dlt_load_id
-    
+
     from source
 )
 

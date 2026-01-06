@@ -309,7 +309,7 @@ sources:
             tests:
               - not_null
               - accepted_values:
-                  values: ['time', 'distance', 'altitude', 'velocity_smooth', 'heartrate', 'cadence', 'watts', 'temp', 'moving', 'grade_smooth']
+                  values: ['time', 'distance', 'altitude', 'velocity_smooth', 'heartrate', 'cadence', 'watts', 'temp', 'moving', 'grade_smooth', 'latlng']
 
           - name: data
             data_type: json

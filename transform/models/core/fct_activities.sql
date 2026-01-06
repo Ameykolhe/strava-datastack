@@ -1,9 +1,8 @@
 with activities as (
     select *
     from {{ ref('stg_strava_activities') }}
-)
-
-, final as (
+),
+final as (
     select
         activity_id
         , activity_name
@@ -13,13 +12,12 @@ with activities as (
         , started_at_local
         , timezone
         , utc_offset_seconds
-        
+
         /* Activity stats */
         , elapsed_seconds
         , moving_seconds
         , distance
         , distance_metric
-        -- , cadence_avg -- Column not present in source
         , hr_avg
         , hr_max
         , speed_avg
@@ -27,10 +25,6 @@ with activities as (
         , speed_avg_metric
         , speed_max_metric
         , power_avg
-        -- , power_weighted_avg -- Column not present in source
-        -- , power_max -- Column not present in source
-        -- , temperature_avg -- Column not present in source
-        -- , temperature_avg_metric -- Column not present in source
         , elevation_min
         , elevation_max
         , elevation_gain
@@ -68,9 +62,6 @@ with activities as (
         , upload_id
         , visibility
         , workout_type
-        -- , location_city -- Column not present in source
-        -- , location_country -- Column not present in source
-        -- , location_state -- Column not present in source
 
     from activities
 )

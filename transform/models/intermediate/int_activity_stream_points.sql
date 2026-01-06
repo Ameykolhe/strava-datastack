@@ -22,8 +22,14 @@ with activity_streams as (
         activity_stream_id
         , activity_id
         , stream_type
-        , unnest(stream_list) as stream_point
-        , generate_subscripts(stream_list, 1) as stream_index
+        , case
+            when stream_type = 'latlng' then cast(unnest(latlng_list) as varchar)
+            else cast(unnest(stream_list) as varchar)
+        end as stream_point
+        , case
+            when stream_type = 'latlng' then generate_subscripts(latlng_list, 1)
+            else generate_subscripts(stream_list, 1)
+        end as stream_index
         , inserted_at
 
     from activity_streams

@@ -1,0 +1,51 @@
+# Strava API Resource Definitions
+
+resources:
+  - name: "activities"
+    primary_key: "id"
+    write_disposition: "merge"
+    endpoint:
+      path: "activities"
+      params:
+        per_page: 200
+    incremental:
+      enabled: true
+      start_param: "after"
+      end_param: "before"
+      cursor_path: "start_date"
+
+  - name: "activity_streams"
+    primary_key: ["_activities_id", "type"]
+    max_table_nesting: 0
+    endpoint:
+      path: "activities/{activity_id}/streams"
+      params:
+        keys: "time,distance,altitude,velocity_smooth,heartrate,cadence,watts,temp,moving,grade_smooth,latlng"
+        activity_id:
+          type: "resolve"
+          resource: "activities"
+          field: "id"
+      response_actions:
+        - status_code: 404
+          content: "Not Found"
+          action: "ignore"
+      pagination:
+        maximum_page: 1
+    include_from_parent: ["id"]
+
+  - name: "activity_zones"
+    primary_key: ["_activities_id", "type"]
+    endpoint:
+      path: "activities/{activity_id}/zones"
+      params:
+        activity_id:
+          type: "resolve"
+          resource: "activities"
+          field: "id"
+      response_actions:
+        - status_code: 404
+          content: "Not Found"
+          action: "ignore"
+      pagination:
+        maximum_page: 1
+    include_from_parent: ["id"]
