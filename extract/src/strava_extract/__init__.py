@@ -2,9 +2,9 @@
 
 __version__ = "0.1.0"
 
-from .pipeline import run_pipeline, StravaPipeline
+from .config.settings import get_credentials, get_settings
+from .pipeline import StravaPipeline, run_pipeline
 from .sources.strava_source import strava_source
-from .config.settings import get_settings, get_credentials
 
 __all__ = [
     "run_pipeline",

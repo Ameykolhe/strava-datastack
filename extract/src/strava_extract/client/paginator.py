@@ -2,11 +2,11 @@
 
 from typing import Optional
 
-from dlt.sources.helpers.rest_client.paginators import PageNumberPaginator
 from dlt.sources.helpers.requests import Request
+from dlt.sources.helpers.rest_client.paginators import PageNumberPaginator
 
-from .rate_limiter import RateLimiter
 from ..utils.logging import get_logger
+from .rate_limiter import RateLimiter
 
 logger = get_logger(__name__)
 
@@ -26,7 +26,7 @@ class RateLimitedPaginator(PageNumberPaginator):
         base_page: int = 1,
         total_path: Optional[str] = None,
         maximum_page: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Initialize rate-limited paginator.
@@ -43,7 +43,7 @@ class RateLimitedPaginator(PageNumberPaginator):
             base_page=base_page,
             total_path=total_path,
             maximum_page=maximum_page,
-            **kwargs
+            **kwargs,
         )
         self.rate_limiter = rate_limiter
         self.resource_name = resource_name

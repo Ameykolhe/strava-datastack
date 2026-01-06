@@ -1,9 +1,10 @@
 """Type-safe configuration management using Pydantic."""
 
-import yaml
 from pathlib import Path
-from typing import Optional, Literal
-from pydantic import BaseModel, Field, SecretStr, field_validator
+from typing import Literal, Optional
+
+import yaml
+from pydantic import BaseModel, Field, SecretStr
 from pydantic_settings import BaseSettings
 
 from ..utils.exceptions import ConfigurationError
@@ -11,6 +12,7 @@ from ..utils.exceptions import ConfigurationError
 
 class APIConfig(BaseModel):
     """API configuration settings."""
+
     base_url: str = "https://www.strava.com/api/v3/"
     version: str = "v3"
     timeout_seconds: int = 30
@@ -20,6 +22,7 @@ class APIConfig(BaseModel):
 
 class RateLimitConfig(BaseModel):
     """Rate limiting configuration settings."""
+
     max_requests: int = 95
     period_minutes: int = 15
     enable_rate_limiter: bool = True
@@ -28,6 +31,7 @@ class RateLimitConfig(BaseModel):
 
 class PaginationConfig(BaseModel):
     """Pagination configuration settings."""
+
     default_page_size: int = 200
     max_page_size: int = 200
     base_page: int = 1
@@ -35,6 +39,7 @@ class PaginationConfig(BaseModel):
 
 class PipelineConfig(BaseModel):
     """DLT pipeline configuration settings."""
+
     name: str = "strava_datastack"
     destination: str = "duckdb"
     dataset_name: str = "strava_raw"
@@ -43,12 +48,14 @@ class PipelineConfig(BaseModel):
 
 class IncrementalConfig(BaseModel):
     """Incremental loading configuration settings."""
+
     default_lookback_days: int = 30
     cursor_field: str = "start_date"
 
 
 class LoggingConfig(BaseModel):
     """Logging configuration settings."""
+
     level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     format: Literal["json", "text"] = "text"
     log_file: Optional[str] = None
@@ -61,12 +68,12 @@ class StravaCredentials(BaseSettings):
 
     These values should be set in .env file or as environment variables.
     """
+
     client_id: str = Field(..., description="Strava API client ID")
     client_secret: SecretStr = Field(..., description="Strava API client secret")
     refresh_token: SecretStr = Field(..., description="Strava OAuth refresh token")
     access_token_url: str = Field(
-        default="https://www.strava.com/oauth/token",
-        description="OAuth token URL"
+        default="https://www.strava.com/oauth/token", description="OAuth token URL"
     )
 
     model_config = {
@@ -83,6 +90,7 @@ class Settings(BaseSettings):
 
     Loads configuration from YAML file with environment variable overrides.
     """
+
     api: APIConfig = Field(default_factory=APIConfig)
     rate_limiting: RateLimitConfig = Field(default_factory=RateLimitConfig)
     pagination: PaginationConfig = Field(default_factory=PaginationConfig)
@@ -91,13 +99,11 @@ class Settings(BaseSettings):
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
 
     environment: Literal["development", "staging", "production"] = Field(
-        default="development",
-        description="Deployment environment"
+        default="development", description="Deployment environment"
     )
 
     config_path: Optional[Path] = Field(
-        default=None,
-        description="Path to configuration file"
+        default=None, description="Path to configuration file"
     )
 
     model_config = {
@@ -183,7 +189,7 @@ def get_credentials() -> StravaCredentials:
         ConfigurationError: If required credentials are missing.
     """
     try:
-        return StravaCredentials()
+        return StravaCredentials()  # type: ignore[call-arg]
     except Exception as e:
         raise ConfigurationError(
             f"Failed to load Strava credentials: {e}\n"

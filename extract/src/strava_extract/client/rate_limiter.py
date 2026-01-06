@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from threading import Lock
 from typing import Optional
 
-from tqdm import tqdm
+from tqdm import tqdm  # type: ignore[import-untyped]
 
 from ..config.settings import get_settings
 from ..utils.logging import get_logger
@@ -25,7 +25,7 @@ class RateLimiter:
         self,
         max_requests: Optional[int] = None,
         period: Optional[timedelta] = None,
-        show_progress: Optional[bool] = None
+        show_progress: Optional[bool] = None,
     ):
         """
         Initialize rate limiter.
@@ -40,7 +40,8 @@ class RateLimiter:
         self.max_requests = max_requests or settings.rate_limiting.max_requests
         self.period = period or timedelta(minutes=settings.rate_limiting.period_minutes)
         self.show_progress = (
-            show_progress if show_progress is not None
+            show_progress
+            if show_progress is not None
             else settings.rate_limiting.show_progress_bar
         )
 
@@ -108,7 +109,7 @@ class RateLimiter:
             unit="s",
             ncols=80,
             colour="blue",
-            bar_format="{l_bar}{bar}| {remaining} seconds remaining"
+            bar_format="{l_bar}{bar}| {remaining} seconds remaining",
         ) as pbar:
             for _ in range(int(sleep_seconds)):
                 time.sleep(1)
@@ -140,7 +141,7 @@ class RateLimiter:
         """
         state = self.__dict__.copy()
         # Remove the unpicklable Lock
-        del state['_lock']
+        del state["_lock"]
         return state
 
     def __setstate__(self, state):

@@ -1,13 +1,12 @@
 """Structured logging configuration for the Strava extract pipeline."""
 
+import json
 import logging
 import sys
-import json
 import uuid
-from typing import Optional
-from datetime import datetime
 from contextvars import ContextVar
-
+from datetime import datetime
+from typing import Optional
 
 # Context variable for trace ID
 trace_id_var: ContextVar[Optional[str]] = ContextVar("trace_id", default=None)
@@ -59,14 +58,12 @@ class TextFormatter(logging.Formatter):
         """Initialize text formatter with standard format."""
         super().__init__(
             fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S"
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
 
 
 def setup_logging(
-    level: str = "INFO",
-    format_type: str = "text",
-    log_file: Optional[str] = None
+    level: str = "INFO", format_type: str = "text", log_file: Optional[str] = None
 ) -> None:
     """
     Configure application logging.
@@ -84,12 +81,14 @@ def setup_logging(
     root_logger.handlers.clear()
 
     # Create handler
+    handler: logging.Handler
     if log_file:
         handler = logging.FileHandler(log_file)
     else:
         handler = logging.StreamHandler(sys.stdout)
 
     # Set formatter
+    formatter: logging.Formatter
     if format_type == "json":
         formatter = JSONFormatter()
     else:

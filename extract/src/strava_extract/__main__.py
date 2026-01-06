@@ -2,17 +2,18 @@
 
 import argparse
 import sys
-from typing import Optional
 from pathlib import Path
 
 # Load .env file early
 from dotenv import load_dotenv
+
 load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
-from .pipeline import run_pipeline
-from .utils.logging import setup_logging, get_logger
-from .utils.exceptions import StravaExtractError
-from .config.settings import get_settings
+from .config.settings import get_settings  # noqa: E402
+from .pipeline import run_pipeline  # noqa: E402
+from .utils.exceptions import StravaExtractError  # noqa: E402
+from .utils.logging import get_logger, setup_logging  # noqa: E402
+
 
 def parse_args() -> argparse.Namespace:
     """
@@ -40,28 +41,28 @@ Examples:
 
   # Use custom config file
   STRAVA_CONFIG_PATH=/path/to/config.yaml python -m strava_extract
-        """
+        """,
     )
 
     parser.add_argument(
         "--start-date",
         type=str,
         default=None,
-        help="Start date for data extraction (ISO format: YYYY-MM-DD)"
+        help="Start date for data extraction (ISO format: YYYY-MM-DD)",
     )
 
     parser.add_argument(
         "--end-date",
         type=str,
         default=None,
-        help="End date for data extraction (ISO format: YYYY-MM-DD)"
+        help="End date for data extraction (ISO format: YYYY-MM-DD)",
     )
 
     parser.add_argument(
         "--config",
         type=str,
         default=None,
-        help="Path to configuration file (overrides STRAVA_CONFIG_PATH env var)"
+        help="Path to configuration file (overrides STRAVA_CONFIG_PATH env var)",
     )
 
     parser.add_argument(
@@ -69,7 +70,7 @@ Examples:
         type=str,
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         default=None,
-        help="Override log level from config"
+        help="Override log level from config",
     )
 
     return parser.parse_args()
@@ -87,6 +88,7 @@ def main() -> int:
     # Override config path if provided
     if args.config:
         import os
+
         os.environ["STRAVA_CONFIG_PATH"] = args.config
 
     try:
@@ -96,17 +98,14 @@ def main() -> int:
         setup_logging(
             level=log_level,
             format_type=settings.logging.format,
-            log_file=settings.logging.log_file
+            log_file=settings.logging.log_file,
         )
 
         logger = get_logger(__name__)
         logger.info("Starting Strava extraction pipeline")
 
         # Run pipeline
-        load_info = run_pipeline(
-            start_date=args.start_date,
-            end_date=args.end_date
-        )
+        load_info = run_pipeline(start_date=args.start_date, end_date=args.end_date)
 
         # Print summary
         print("\n" + "=" * 80)
@@ -122,7 +121,7 @@ def main() -> int:
         try:
             logger = get_logger(__name__)
             logger.error(f"Pipeline failed: {e}", exc_info=True)
-        except:
+        except Exception:
             pass
 
         print(f"\nERROR: {e}\n", file=sys.stderr)
@@ -132,7 +131,7 @@ def main() -> int:
         try:
             logger = get_logger(__name__)
             logger.warning("Pipeline interrupted by user")
-        except:
+        except Exception:
             pass
 
         print("\nPipeline interrupted by user\n", file=sys.stderr)
@@ -142,7 +141,7 @@ def main() -> int:
         try:
             logger = get_logger(__name__)
             logger.error(f"Unexpected error: {e}", exc_info=True)
-        except:
+        except Exception:
             pass
 
         print(f"\nUNEXPECTED ERROR: {e}\n", file=sys.stderr)

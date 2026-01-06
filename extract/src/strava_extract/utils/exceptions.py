@@ -5,21 +5,25 @@ from typing import Optional
 
 class StravaExtractError(Exception):
     """Base exception for all Strava extract errors."""
+
     pass
 
 
 class ConfigurationError(StravaExtractError):
     """Raised when there are configuration-related errors."""
+
     pass
 
 
 class AuthenticationError(StravaExtractError):
     """Raised when authentication or authorization fails."""
+
     pass
 
 
 class RateLimitError(StravaExtractError):
     """Raised when rate limiting errors occur."""
+
     pass
 
 
@@ -40,9 +44,11 @@ class APIError(StravaExtractError):
 
 class ValidationError(StravaExtractError):
     """Raised when input validation fails."""
+
     pass
 
 
 class PipelineError(StravaExtractError):
     """Raised when pipeline execution fails."""
+
     pass

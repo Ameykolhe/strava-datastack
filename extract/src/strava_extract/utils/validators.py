@@ -29,10 +29,7 @@ def validate_date_string(date_str: Optional[str], field_name: str = "date") -> N
         ) from e
 
 
-def validate_date_range(
-    start_date: Optional[str],
-    end_date: Optional[str]
-) -> None:
+def validate_date_range(start_date: Optional[str], end_date: Optional[str]) -> None:
     """
     Validate that start_date is before end_date.
 

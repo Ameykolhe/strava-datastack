@@ -1,12 +1,12 @@
 """Strava OAuth2 authentication implementation."""
 
-from typing import Any, Dict
 import os
+from typing import Any, Dict
 
 from dlt.sources.helpers.rest_client.auth import OAuth2ClientCredentials
 
-from ..utils.logging import get_logger
 from ..utils.exceptions import AuthenticationError
+from ..utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -58,7 +58,9 @@ def get_auth() -> StravaOAuth2:
         client_id = os.getenv("CREDENTIALS__CLIENT_ID")
         client_secret = os.getenv("CREDENTIALS__CLIENT_SECRET")
         refresh_token = os.getenv("CREDENTIALS__REFRESH_TOKEN")
-        access_token_url = os.getenv("CREDENTIALS__ACCESS_TOKEN_URL", "https://www.strava.com/oauth/token")
+        access_token_url = os.getenv(
+            "CREDENTIALS__ACCESS_TOKEN_URL", "https://www.strava.com/oauth/token"
+        )
 
         # Validate required credentials
         if not all([client_id, client_secret, refresh_token]):
@@ -66,6 +68,11 @@ def get_auth() -> StravaOAuth2:
                 "Missing required credentials. Please ensure CREDENTIALS__CLIENT_ID, "
                 "CREDENTIALS__CLIENT_SECRET, and CREDENTIALS__REFRESH_TOKEN are set in your .env file."
             )
+
+        # Type narrowing assertions
+        assert client_id is not None
+        assert client_secret is not None
+        assert refresh_token is not None
 
         # Create auth instance
         auth = StravaOAuth2(
@@ -78,7 +85,7 @@ def get_auth() -> StravaOAuth2:
                 "client_id": client_id,
                 "client_secret": client_secret,
             },
-            default_token_expiration=21600  # 6 hours
+            default_token_expiration=21600,  # 6 hours
         )
 
         logger.info("Strava OAuth2 authentication initialized")
@@ -88,6 +95,4 @@ def get_auth() -> StravaOAuth2:
         raise
     except Exception as e:
         logger.error(f"Failed to initialize OAuth2: {e}")
-        raise AuthenticationError(
-            f"Authentication initialization failed: {e}"
-        ) from e
+        raise AuthenticationError(f"Authentication initialization failed: {e}") from e

@@ -1,13 +1,14 @@
 """Pytest fixtures and configuration for Strava extract tests."""
 
-import pytest
+from datetime import timedelta
 from pathlib import Path
 from typing import Generator
 from unittest.mock import Mock, patch
-from datetime import timedelta
 
-from strava_extract.config.settings import Settings, StravaCredentials
+import pytest
+
 from strava_extract.client.rate_limiter import RateLimiter
+from strava_extract.config.settings import Settings, StravaCredentials
 
 
 @pytest.fixture
@@ -40,7 +41,7 @@ def test_config() -> Settings:
         "logging": {
             "level": "DEBUG",
             "format": "text",
-        }
+        },
     }
     return Settings(**config_data)
 
@@ -53,11 +54,14 @@ def test_credentials() -> StravaCredentials:
     Returns:
         StravaCredentials instance with test values.
     """
-    with patch.dict("os.environ", {
-        "STRAVA_CLIENT_ID": "test_client_id",
-        "STRAVA_CLIENT_SECRET": "test_secret",
-        "STRAVA_REFRESH_TOKEN": "test_refresh_token",
-    }):
+    with patch.dict(
+        "os.environ",
+        {
+            "STRAVA_CLIENT_ID": "test_client_id",
+            "STRAVA_CLIENT_SECRET": "test_secret",
+            "STRAVA_REFRESH_TOKEN": "test_refresh_token",
+        },
+    ):
         return StravaCredentials()
 
 
@@ -69,11 +73,7 @@ def rate_limiter() -> RateLimiter:
     Returns:
         RateLimiter instance with test settings.
     """
-    return RateLimiter(
-        max_requests=5,
-        period=timedelta(seconds=1),
-        show_progress=False
-    )
+    return RateLimiter(max_requests=5, period=timedelta(seconds=1), show_progress=False)
 
 
 @pytest.fixture
@@ -94,14 +94,14 @@ def mock_strava_api() -> Generator:
                     "name": "Morning Run",
                     "type": "Run",
                     "distance": 5000,
-                    "start_date": "2024-01-01T08:00:00Z"
+                    "start_date": "2024-01-01T08:00:00Z",
                 },
                 {
                     "id": 2,
                     "name": "Evening Ride",
                     "type": "Ride",
                     "distance": 20000,
-                    "start_date": "2024-01-02T18:00:00Z"
+                    "start_date": "2024-01-02T18:00:00Z",
                 },
             ]
         }
@@ -144,7 +144,7 @@ def sample_activities():
             "start_date": "2024-01-03T10:00:00Z",
             "moving_time": 7200,
             "total_elevation_gain": 500,
-        }
+        },
     ]
 
 
@@ -157,6 +157,7 @@ def reset_settings():
     settings don't leak between tests.
     """
     from strava_extract.config.settings import reset_settings
+
     reset_settings()
     yield
     reset_settings()

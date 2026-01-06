@@ -1,15 +1,16 @@
 """Main pipeline orchestration for Strava data extraction."""
 
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
 import dlt
+from dlt.common.pipeline import LoadInfo
 
 from .config.settings import get_settings
 from .sources.strava_source import strava_source
-from .utils.logging import get_logger, set_trace_id, setup_logging
 from .utils.exceptions import PipelineError
-from .utils.validators import validate_date_string, validate_date_range
+from .utils.logging import get_logger, set_trace_id, setup_logging
+from .utils.validators import validate_date_range, validate_date_string
 
 logger = get_logger(__name__)
 
@@ -26,7 +27,7 @@ class StravaPipeline:
         self,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
-        trace_id: Optional[str] = None
+        trace_id: Optional[str] = None,
     ):
         """
         Initialize Strava pipeline.
@@ -75,12 +76,12 @@ class StravaPipeline:
 
         return pipeline
 
-    def run(self) -> dict:
+    def run(self) -> LoadInfo:
         """
         Execute the pipeline.
 
         Returns:
-            Load info dictionary from dlt.
+            Load info from dlt.
 
         Raises:
             PipelineError: If pipeline execution fails.
@@ -93,10 +94,7 @@ class StravaPipeline:
             pipeline = self._create_pipeline()
 
             # Create source
-            source = strava_source(
-                start_date=self.start_date,
-                end_date=self.end_date
-            )
+            source = strava_source(start_date=self.start_date, end_date=self.end_date)
 
             # Run pipeline
             logger.info("Executing pipeline run...")
@@ -104,27 +102,21 @@ class StravaPipeline:
 
             # Log results
             duration = (datetime.utcnow() - start_time).total_seconds()
-            logger.info(
-                f"Pipeline completed successfully in {duration:.2f}s"
-            )
+            logger.info(f"Pipeline completed successfully in {duration:.2f}s")
 
             return load_info
 
         except Exception as e:
             duration = (datetime.utcnow() - start_time).total_seconds()
-            logger.error(
-                f"Pipeline failed after {duration:.2f}s: {e}",
-                exc_info=True
-            )
+            logger.error(f"Pipeline failed after {duration:.2f}s: {e}", exc_info=True)
 
             # Fail fast - raise immediately
             raise PipelineError(f"Pipeline execution failed: {e}") from e
 
 
 def run_pipeline(
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None
-) -> dict:
+    start_date: Optional[str] = None, end_date: Optional[str] = None
+) -> LoadInfo:
     """
     Convenience function to run the pipeline.
 
@@ -143,7 +135,7 @@ def run_pipeline(
     setup_logging(
         level=settings.logging.level,
         format_type=settings.logging.format,
-        log_file=settings.logging.log_file
+        log_file=settings.logging.log_file,
     )
 
     # Create and run pipeline

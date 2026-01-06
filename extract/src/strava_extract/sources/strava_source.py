@@ -1,18 +1,18 @@
 """DLT source definition for Strava API extraction."""
 
-from typing import Optional
 from pathlib import Path
-import yaml
+from typing import Optional
 
 import dlt
+import yaml
 from dlt.common.pendulum import pendulum
 from dlt.sources.rest_api import RESTAPIConfig, rest_api_resources
 
-from ..client.rate_limiter import RateLimiter
 from ..client.paginator import RateLimitedPaginator
+from ..client.rate_limiter import RateLimiter
 from ..config.settings import get_settings
-from ..utils.logging import get_logger
 from ..utils.exceptions import ConfigurationError
+from ..utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -43,7 +43,9 @@ def load_resource_config() -> list:
     Raises:
         ConfigurationError: If resource config file cannot be loaded.
     """
-    config_path = Path(__file__).parent.parent.parent.parent / "config" / "resources.yaml"
+    config_path = (
+        Path(__file__).parent.parent.parent.parent / "config" / "resources.yaml"
+    )
 
     if not config_path.exists():
         raise ConfigurationError(f"Resource config not found: {config_path}")
@@ -60,8 +62,7 @@ def load_resource_config() -> list:
 
 
 def build_rest_api_config(
-    start_date: Optional[str],
-    end_date: Optional[str]
+    start_date: Optional[str], end_date: Optional[str]
 ) -> RESTAPIConfig:
     """
     Build REST API configuration from resource definitions.
@@ -81,18 +82,18 @@ def build_rest_api_config(
 
     # Determine incremental dates
     load_from_date = (
-        pendulum.parse(start_date).to_iso8601_string()
+        pendulum.parse(start_date).to_iso8601_string()  # type: ignore[union-attr]
         if start_date
         else dlt.current.source_state().setdefault(
             "last_value",
-            pendulum.today().subtract(
-                days=settings.incremental.default_lookback_days
-            ).to_iso8601_string()
+            pendulum.today()
+            .subtract(days=settings.incremental.default_lookback_days)
+            .to_iso8601_string(),
         )
     )
 
     load_until_date = (
-        pendulum.parse(end_date).to_iso8601_string()
+        pendulum.parse(end_date).to_iso8601_string()  # type: ignore[union-attr]
         if end_date
         else None
     )
@@ -113,9 +114,11 @@ def build_rest_api_config(
                     resource_name=res_config["name"],
                     base_page=settings.pagination.base_page,
                     total_path=None,
-                    maximum_page=res_config["endpoint"].get("pagination", {}).get("maximum_page")
-                )
-            }
+                    maximum_page=res_config["endpoint"]
+                    .get("pagination", {})
+                    .get("maximum_page"),
+                ),
+            },
         }
 
         # Add optional fields
@@ -129,7 +132,9 @@ def build_rest_api_config(
             resource["include_from_parent"] = res_config["include_from_parent"]
 
         if "response_actions" in res_config["endpoint"]:
-            resource["endpoint"]["response_actions"] = res_config["endpoint"]["response_actions"]
+            resource["endpoint"]["response_actions"] = res_config["endpoint"][
+                "response_actions"
+            ]
 
         # Add incremental configuration if enabled
         if res_config.get("incremental", {}).get("enabled"):
@@ -140,7 +145,11 @@ def build_rest_api_config(
                 "cursor_path": inc_config["cursor_path"],
                 "initial_value": load_from_date,
                 "end_value": load_until_date,
-                "convert": lambda ts: None if ts is None else int(pendulum.parse(ts).timestamp())
+                "convert": lambda ts: (
+                    None
+                    if ts is None
+                    else int(pendulum.parse(ts).timestamp())  # type: ignore[union-attr]
+                ),
             }
 
         resources.append(resource)
@@ -152,10 +161,7 @@ def build_rest_api_config(
 
     # Build full config
     config: RESTAPIConfig = {
-        "client": {
-            "base_url": settings.api.base_url,
-            "auth": auth
-        },
+        "client": {"base_url": settings.api.base_url, "auth": auth},
         "resource_defaults": {
             "primary_key": "id",
             "write_disposition": "merge",
@@ -165,17 +171,14 @@ def build_rest_api_config(
                 },
             },
         },
-        "resources": resources
+        "resources": resources,  # type: ignore[typeddict-item]
     }
 
     return config
 
 
 @dlt.source(name="strava")
-def strava_source(
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None
-):
+def strava_source(start_date: Optional[str] = None, end_date: Optional[str] = None):
     """
     Strava DLT source for extracting activity data.
 
