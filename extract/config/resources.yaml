@@ -4,6 +4,16 @@ resources:
   - name: "activities"
     primary_key: "id"
     write_disposition: "merge"
+    columns:
+      location_city:
+        data_type: "text"
+        nullable: true
+      location_state:
+        data_type: "text"
+        nullable: true
+      location_country:
+        data_type: "text"
+        nullable: true
     endpoint:
       path: "activities"
       params:

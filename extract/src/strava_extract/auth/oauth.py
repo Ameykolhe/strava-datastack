@@ -3,6 +3,7 @@
 import os
 from typing import Any, Dict
 
+from dlt.common.configuration.specs.base_configuration import configspec
 from dlt.sources.helpers.rest_client.auth import OAuth2ClientCredentials
 
 from ..utils.exceptions import AuthenticationError
@@ -11,6 +12,7 @@ from ..utils.logging import get_logger
 logger = get_logger(__name__)
 
 
+@configspec
 class StravaOAuth2(OAuth2ClientCredentials):
     """
     Strava-specific OAuth2 implementation with refresh token support.

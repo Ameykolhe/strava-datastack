@@ -131,6 +131,9 @@ def build_rest_api_config(
         if "include_from_parent" in res_config:
             resource["include_from_parent"] = res_config["include_from_parent"]
 
+        if "columns" in res_config:
+            resource["columns"] = res_config["columns"]
+
         if "response_actions" in res_config["endpoint"]:
             resource["endpoint"]["response_actions"] = res_config["endpoint"][
                 "response_actions"
