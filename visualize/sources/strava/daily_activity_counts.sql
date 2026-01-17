@@ -1,0 +1,1 @@
+select * from dbt_sandbox.mart_daily_activity_counts

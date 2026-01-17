@@ -3,10 +3,11 @@
 help:  ## Show this help message
 	@echo "Strava Datastack - Multi-project Makefile"
 	@echo ""
-	@echo "This project consists of 3 independent sub-projects:"
+	@echo "This project consists of 4 independent sub-projects:"
 	@echo "  - extract/    : Data extraction pipeline"
 	@echo "  - transform/  : dbt transformations"
 	@echo "  - visualize/  : Evidence dashboards"
+	@echo "  - airflow/    : Apache Airflow orchestration"
 	@echo ""
 	@echo "Common targets:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -16,6 +17,7 @@ help:  ## Show this help message
 	@echo "    make -C extract help"
 	@echo "    make -C transform help"
 	@echo "    make -C visualize help"
+	@echo "    make -C airflow help"
 
 install-all:  ## Install dependencies for all projects
 	@echo "Installing extract dependencies..."
@@ -41,10 +43,10 @@ install-visualize:  ## Install visualize dependencies
 
 # Extract targets
 extract:  ## Run data extraction pipeline
-	cd extract && $(MAKE) run
+	$(MAKE) -C extract run
 
 extract-dev:  ## Run extraction with debug logging
-	cd extract && $(MAKE) run-debug
+	$(MAKE) -C extract run-debug
 
 # Transform targets
 transform:  ## Run dbt transformations
@@ -63,8 +65,30 @@ visualize:  ## Start Evidence development server
 visualize-build:  ## Build Evidence dashboard
 	cd visualize && $(MAKE) build
 
+# Airflow targets
+airflow-build:  ## Build Airflow Docker image
+	cd airflow && $(MAKE) build
+
+airflow-init:  ## Initialize Airflow (first-time setup)
+	cd airflow && $(MAKE) init
+
+airflow-up:  ## Start Airflow services
+	cd airflow && $(MAKE) up
+
+airflow-down:  ## Stop Airflow services
+	cd airflow && $(MAKE) down
+
+airflow-credentials:  ## Set up Strava credentials in Airflow
+	cd airflow && $(MAKE) credentials
+
+airflow-trigger:  ## Trigger Airflow pipeline (last 30 days)
+	cd airflow && $(MAKE) trigger
+
+airflow-logs:  ## View Airflow logs
+	cd airflow && $(MAKE) logs
+
 # Pipeline execution
-pipeline:  ## Run full pipeline: extract -> transform
+pipeline:  ## Run full pipeline: extract -> transform (locally)
 	@echo "Running extraction..."
 	@cd extract && $(MAKE) run
 	@echo ""
@@ -72,6 +96,12 @@ pipeline:  ## Run full pipeline: extract -> transform
 	@cd transform && $(MAKE) run
 	@echo ""
 	@echo "Pipeline complete!"
+
+pipeline-airflow:  ## Run full pipeline via Airflow orchestration
+	@echo "Triggering Airflow pipeline..."
+	@cd airflow && $(MAKE) trigger
+	@echo ""
+	@echo "Pipeline triggered! View progress at http://localhost:8080"
 
 # Clean targets
 clean-all:  ## Clean all build artifacts

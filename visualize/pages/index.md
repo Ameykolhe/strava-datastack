@@ -1,109 +1,59 @@
 ---
-title: Strava Activity Dashboard
+title: Strava Dashboard
 ---
 
-# Strava Activity Dashboard
-
-## Overall Statistics
-
-```sql stats
-select * from strava.activity_stats
+```sql activities_by_sport
+select * from strava.activities_by_sport
 ```
 
-<Grid cols=4>
-    <BigValue
-        data={stats}
-        value=total_activities
-        title="Total Activities"
-    />
-    <BigValue
-        data={stats}
-        value=total_distance_km
-        fmt='#,##0.0'
-        title="Total Distance (km)"
-    />
-    <BigValue
-        data={stats}
-        value=total_moving_hours
-        fmt='#,##0.0'
-        title="Total Moving Hours"
-    />
-    <BigValue
-        data={stats}
-        value=total_kudos
-        fmt='#,##0'
-        title="Total Kudos"
-    />
-</Grid>
-
-## Activity Breakdown by Type
-
-```sql by_type
-select * from strava.activity_by_type
+```sql total_activities
+select sum(activity_count) as total_count from strava.activities_by_sport
 ```
 
-<Grid cols=2>
-    <BarChart
-        data={by_type}
-        title="Activities by Sport Type"
-        x=sport_type
-        y=activity_count
-    />
-    <BarChart
-        data={by_type}
-        title="Total Distance by Sport Type (km)"
-        x=sport_type
-        y=total_distance_km
-    />
-</Grid>
-
-## Monthly Activity Trends
-
-```sql monthly
-select * from strava.monthly_trends
-```
-
-<LineChart
-    data={monthly}
-    title="Monthly Activity Count by Sport"
-    x=month
-    y=activity_count
-    series=sport_type
-/>
-
-<LineChart
-    data={monthly}
-    title="Monthly Distance (km) by Sport"
-    x=month
-    y=total_distance_km
-    series=sport_type
-/>
-
-## Recent Activities
-
-```sql recent
+```sql daily_activity_counts
 select
-    name,
-    sport_type,
-    start_date_local,
-    distance_km,
-    moving_time_minutes,
-    elevation_gain_meters,
-    avg_speed_kmh,
-    average_heartrate,
-    kudos_count
-from strava.activities_overview
-limit 20
+    *,
+    year(activity_date) as activity_year
+from strava.daily_activity_counts
 ```
 
-<DataTable data={recent}>
-    <Column id=name/>
-    <Column id=sport_type/>
-    <Column id=start_date_local fmt='yyyy-MM-dd HH:mm'/>
-    <Column id=distance_km fmt='#,##0.00'/>
-    <Column id=moving_time_minutes fmt='#,##0.0'/>
-    <Column id=elevation_gain_meters fmt='#,##0'/>
-    <Column id=avg_speed_kmh fmt='#,##0.0'/>
-    <Column id=average_heartrate fmt='#,##0'/>
-    <Column id=kudos_count/>
-</DataTable>
+```sql distinct_years
+select distinct year(activity_date) as activity_year
+from strava.daily_activity_counts
+order by activity_year desc
+```
+
+## Overview
+
+<BigValue
+    data={total_activities}
+    value=total_count
+    title="Total Activities"
+/>
+
+### Activities by Sport
+
+<EChartsPie
+    data={activities_by_sport}
+    x=sport_type
+    y=activity_count
+    labels=true
+    title="Activity Count by Sport"
+/>
+
+## Activity Calendar
+
+<ButtonGroup
+    name=year_filter
+    data={distinct_years}
+    value=activity_year
+    title="Select Year"
+/>
+
+<CalendarHeatmap
+    data={daily_activity_counts}
+    date=activity_date
+    value=activity_count
+    title="Activity Heatmap"
+    filters={['year_filter']}
+/>

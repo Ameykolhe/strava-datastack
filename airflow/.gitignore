@@ -1,0 +1,15 @@
+# Airflow logs
+logs/
+
+# Environment file (actual values, not the example)
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Editor directories
+.vscode/
+.idea/

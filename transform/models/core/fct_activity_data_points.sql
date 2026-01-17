@@ -13,6 +13,7 @@ with stream_points as (
                 table=ref('int_activity_stream_points')
                 , column='stream_type'
                 , order_by='stream_type'
+                , default=['altitude', 'distance', 'grade', 'heartrate', 'is_moving', 'latlng', 'time', 'velocity_smooth']
             )
             , agg='max'
             , then_value='stream_point'
@@ -26,28 +27,52 @@ with stream_points as (
 
 , casted as (
     select
-        activity_id
-        , stream_index
-        , cast(is_moving as integer) as is_moving
-        , cast(time as integer) as time
-        , cast(altitude as double) as altitude
-        , cast(distance as double) as distance
-        , cast(grade as double) as grade
-        , cast(heartrate as integer) as heartrate
-        , cast(velocity_smooth as double) as velocity_smooth
-        , latlng
+        *
+        /* Cast and add computed columns */
+        , cast(is_moving as integer) as is_moving_int
+        , cast(time as integer) as time_int
+        , cast(altitude as double) as altitude_dbl
+        , cast(distance as double) as distance_dbl
+        , cast(grade as double) as grade_dbl
+        , cast(velocity_smooth as double) as velocity_smooth_dbl
+        /* Handle optional heartrate - may not exist in all datasets */
+        , cast(null as integer) as heartrate_int
 
     from pivoted
+)
+
+, casted_clean as (
+    select
+        activity_id
+        , stream_index
+        , is_moving_int as is_moving
+        , time_int as time
+        , altitude_dbl as altitude
+        , distance_dbl as distance
+        , grade_dbl as grade
+        , heartrate_int as heartrate
+        , velocity_smooth_dbl as velocity_smooth
+        , latlng
+    from casted
 )
 
 , deltas as (
     select
         {{ dbt_utils.generate_surrogate_key(['activity_id', 'stream_index']) }} as activity_data_point_id
-        , casted.*
+        , activity_id
+        , stream_index
+        , is_moving
+        , time
+        , altitude
+        , distance
+        , grade
+        , heartrate
+        , velocity_smooth
+        , latlng
         , distance - lag(distance) over (partition by activity_id order by stream_index) as distance_delta
         , time - lag(time) over (partition by activity_id order by stream_index) as time_delta
 
-    from casted
+    from casted_clean
 )
 
 , final as (

@@ -14,8 +14,9 @@ with source as (
         , athlete__resource_state as athlete_resource_state
         , athlete_count
         -- , average_cadence as cadence_avg -- Column not present in source
-        , cast(null as double) as hr_avg -- Column not present in source
-        , cast(null as double) as hr_max -- Column not present in source
+        /* Heart rate - variable availability */
+        , {{ safe_column('average_heartrate', 'double', table_ref=source('strava', 'activities')) }} as hr_avg
+        , {{ safe_column('max_heartrate', 'double', table_ref=source('strava', 'activities')) }} as hr_max
         /* Convert m/s to mph */
         , average_speed * (1/1609.344) * 3600 as speed_avg
         , max_speed * (1/1609.344) * 3600 as speed_max
@@ -24,7 +25,8 @@ with source as (
         , max_speed * (1/1000) * 3600 as speed_max_metric
         , average_speed as speed_avg_raw
         , max_speed as speed_max_raw
-        , average_watts as power_avg
+        /* Power - variable availability */
+        , {{ safe_column('average_watts', 'double', table_ref=source('strava', 'activities')) }} as power_avg
         -- , weighted_average_watts as power_weighted_avg -- Column not present in source
         -- , max_watts as power_max -- Column not present in source
         /* Conver C to F */
@@ -46,9 +48,10 @@ with source as (
         , total_elevation_gain as elevation_gain_metric
         , elev_low as elevation_min_metric
         , elev_high as elevation_max_metric
-        , kilojoules
+        /* Kilojoules - variable availability */
+        , {{ safe_column('kilojoules', 'double', table_ref=source('strava', 'activities')) }} as kilojoules
         /* Convert kJ to kcal */
-        , kilojoules * (1/4.184) as calories_burned
+        , {{ safe_column('kilojoules', 'double', table_ref=source('strava', 'activities')) }} * (1/4.184) as calories_burned
         , kudos_count
         -- , location_city -- Column not present in source
         -- , location_country -- Column not present in source
@@ -66,17 +69,18 @@ with source as (
         , upload_id_str
         , visibility
         -- , weighted_average_watts -- Column not present in source
+        /* Workout type - variable availability */
         , case
-            when workout_type in (1, 11) then 'Race'
-            when workout_type = 2 then 'Long Run'
-            when workout_type in (3, 12) then 'Workout'
-            when workout_type in (0, 10) or workout_type is null then 'None'
+            when {{ safe_column('workout_type', 'bigint', table_ref=source('strava', 'activities')) }} in (1, 11) then 'Race'
+            when {{ safe_column('workout_type', 'bigint', table_ref=source('strava', 'activities')) }} = 2 then 'Long Run'
+            when {{ safe_column('workout_type', 'bigint', table_ref=source('strava', 'activities')) }} in (3, 12) then 'Workout'
+            when {{ safe_column('workout_type', 'bigint', table_ref=source('strava', 'activities')) }} in (0, 10) or {{ safe_column('workout_type', 'bigint', table_ref=source('strava', 'activities')) }} is null then 'None'
             else 'Unknown'
         end as workout_type
-        , workout_type as workout_type_raw
+        , {{ safe_column('workout_type', 'bigint', table_ref=source('strava', 'activities')) }} as workout_type_raw
 
         , commute as is_commute
-        , device_watts as is_device_watts
+        , {{ safe_column('device_watts', 'boolean', 'false', table_ref=source('strava', 'activities')) }} as is_device_watts
         , flagged as is_flagged
         , from_accepted_tag as is_friends_activity
         , has_heartrate as has_heartrate

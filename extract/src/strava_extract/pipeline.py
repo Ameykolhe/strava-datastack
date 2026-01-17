@@ -62,16 +62,21 @@ class StravaPipeline:
         Returns:
             Configured dlt.Pipeline instance.
         """
+        import os
+
+        # Get database path from environment variable or use default
+        db_path = os.getenv("DUCKDB_PATH", "/opt/airflow/data/strava_datastack.duckdb")
+
         pipeline = dlt.pipeline(
             pipeline_name=self.settings.pipeline.name,
-            destination=self.settings.pipeline.destination,
+            destination=dlt.destinations.duckdb(credentials=db_path),
             dataset_name=self.settings.pipeline.dataset_name,
             progress=self.settings.pipeline.progress,
         )
 
         logger.info(
             f"DLT pipeline created: {pipeline.pipeline_name} -> "
-            f"{pipeline.destination}/{self.settings.pipeline.dataset_name}"
+            f"{pipeline.destination}/{self.settings.pipeline.dataset_name} (db_path={db_path})"
         )
 
         return pipeline
