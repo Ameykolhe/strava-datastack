@@ -18,24 +18,17 @@
     }));
 
   const getOption = () => {
-    const option = {
+    return {
       tooltip: { trigger: "item" },
-      legend: { orient: "vertical", left: "left" },
       series: [
         {
           type: "pie",
           radius: "60%",
           data: buildSeriesData(),
-          label: { show: labels },
+          label: { show: false },
         },
       ],
     };
-
-    if (title) {
-      option.title = { text: title, left: "center" };
-    }
-
-    return option;
   };
 
   const render = () => {
@@ -62,7 +55,7 @@
     chart = null;
   });
 
-  $: if (chart) {
+  $: if (chart && data) {
     render();
   }
 </script>
