@@ -19,13 +19,14 @@
 
   const getOption = () => {
     return {
+      title: title ? { text: title, left: "center" } : undefined,
       tooltip: { trigger: "item" },
       series: [
         {
           type: "pie",
           radius: "60%",
           data: buildSeriesData(),
-          label: { show: false },
+          label: { show: labels },
         },
       ],
     };

@@ -59,6 +59,7 @@ final as (
         , external_id
         , gear_id
         , map_id
+        , map_summary_polyline
         , upload_id
         , visibility
         , workout_type
