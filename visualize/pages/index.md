@@ -98,32 +98,6 @@ where activity_year = ${inputs.trend_year_filter.value}
     fmt='#,##0.0'
 />
 
-## Activity Calendar
-
-<Dropdown
-    name=year_filter
-    data={distinct_years}
-    value=activity_year
-    defaultValue={distinct_years[0].max_year}
-    order=activity_year desc
-    title="Select Year"
-/>
-
-```sql filtered_calendar
-select
-    activity_date,
-    activity_count
-from ${home_daily_trends}
-where activity_year = ${inputs.year_filter.value}
-```
-
-<CalendarHeatmap
-    data={filtered_calendar}
-    date=activity_date
-    value=activity_count
-    title="Activity Heatmap"
-/>
-
 ## Recent Activities
 
 <DataTable
@@ -137,11 +111,3 @@ where activity_year = ${inputs.year_filter.value}
     <Column id=moving_seconds title="Time"/>
     <Column id=elevation_gain title="Elev (ft)" fmt="#,##0"/>
 </DataTable>
-
-### Browse by Year
-
-{#each distinct_years as year}
-
-[{year.activity_year}](/year/{year.activity_year})
-
-{/each}

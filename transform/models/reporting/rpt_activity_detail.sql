@@ -62,6 +62,7 @@ activity_detail as (
 
         /* Map data */
         map_id,
+        map_summary_polyline,
         gear_id
 
     from activities

@@ -1,5 +1,6 @@
 ---
 title: Year in Sports
+sidebar_link: false
 ---
 
 ```sql year_kpis
@@ -13,6 +14,15 @@ where year = ${params.year}
 order by month
 ```
 
+```sql year_calendar
+select
+    activity_date,
+    activity_count
+from strava.home_daily_trends
+where year(activity_date) = ${params.year}
+order by activity_date
+```
+
 ```sql distinct_years
 select * from strava.distinct_years
 order by activity_year desc
@@ -22,6 +32,11 @@ order by activity_year desc
 select * from strava.activity_list
 where year(started_at_local) = ${params.year}
 order by started_at desc
+```
+
+```sql year_routes
+select * from strava.year_routes
+where activity_year = ${params.year}
 ```
 
 # {params.year} Review
@@ -67,58 +82,66 @@ order by started_at desc
     fmt='#,##0'
 />
 
+## Activity Calendar
+
+<CalendarHeatmap
+    data={year_calendar}
+    date=activity_date
+    value=activity_count
+    min=0
+    max=5
+    legend=false
+/>
+
 ## Monthly Trends
+
+<hr>
 
 <BarChart
     data={year_monthly}
-    x=month
+    x=month_name
+    xType=category
+    sort=false
     y=activity_count
     title="Activities by Month"
     yAxisTitle="Activities"
 />
 
+<hr>
+
 <LineChart
     data={year_monthly}
-    x=month
+    x=month_name
+    xType=category
+    sort=false
     y=total_distance
     title="Distance by Month"
     yAxisTitle="Distance (mi)"
 />
 
+<hr>
+
 <BarChart
     data={year_monthly}
-    x=month
+    x=month_name
+    xType=category
+    sort=false
     y=total_elevation_gain
     title="Elevation by Month"
     yAxisTitle="Elevation (ft)"
 />
 
-## Activities in {params.year}
+## Activity Heatmap
 
-<DataTable
-    data={year_activities}
-    search=true
-    rows=20
-    link=activity_link
->
-    <Column id=activity_name title="Activity"/>
-    <Column id=sport_type title="Sport"/>
-    <Column id=started_at_local title="Date" fmt="mmm d, yyyy"/>
-    <Column id=distance title="Distance (mi)" fmt="#,##0.1"/>
-    <Column id=moving_seconds title="Time"/>
-    <Column id=elevation_gain title="Elev (ft)" fmt="#,##0"/>
-    </DataTable>
+{#if year_routes.length > 0 && year_routes[0].polylines}
 
-## Navigate
+<ActivityHeatmap
+polylines={year_routes[0].polylines}
+height={500}
+/>
 
-{#each distinct_years as y}
+{:else}
 
-{#if y.activity_year != params.year}
-
-[{y.activity_year}](/year/{y.activity_year})
+No routes available to display for this year.
 
 {/if}
-
-{/each}
-
-[Back to Home](/)

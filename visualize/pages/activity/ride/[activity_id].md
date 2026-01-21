@@ -2,6 +2,10 @@
 title: Activity Details
 ---
 
+<script>
+  import ZoneDistribution from "$lib/ZoneDistribution.svelte";
+</script>
+
 ```sql activity_detail
 select * from strava.activity_detail
 where activity_id = CAST('${params.activity_id}' AS BIGINT)
@@ -108,61 +112,23 @@ order by zone_id
 
 {/if}
 
-{#if hr_zones.length > 0}
-
 ## Heart Rate Zones
 
-<BarChart
+<ZoneDistribution
     data={hr_zones}
-    x=zone_name
-    y=pct_in_zone
-    title="Time in HR Zones"
-    yAxisTitle="% of Time"
+    minField="zone_min_bpm"
+    maxField="zone_max_bpm"
+    unit="bpm"
 />
-
-<DataTable data={hr_zones}>
-    <Column id=zone_name title="Zone"/>
-    <Column id=zone_min_bpm title="Min BPM"/>
-    <Column id=zone_max_bpm title="Max BPM"/>
-    <Column id=seconds_in_zone title="Seconds"/>
-    <Column id=pct_in_zone title="% Time" fmt="#,##0.1"/>
-</DataTable>
-
-{:else}
-
-## Heart Rate Zones
-
-*No heart rate zone data available for this activity.*
-
-{/if}
-
-{#if power_zones.length > 0}
 
 ## Power Zones
 
-<BarChart
+<ZoneDistribution
     data={power_zones}
-    x=zone_name
-    y=pct_in_zone
-    title="Time in Power Zones"
-    yAxisTitle="% of Time"
+    minField="zone_min_watts"
+    maxField="zone_max_watts"
+    unit="W"
 />
-
-<DataTable data={power_zones}>
-    <Column id=zone_name title="Zone"/>
-    <Column id=zone_min_watts title="Min Watts"/>
-    <Column id=zone_max_watts title="Max Watts"/>
-    <Column id=seconds_in_zone title="Seconds"/>
-    <Column id=pct_in_zone title="% Time" fmt="#,##0.1"/>
-</DataTable>
-
-{:else}
-
-## Power Zones
-
-*No power zone data available for this activity.*
-
-{/if}
 
 ### Strava Stats
 

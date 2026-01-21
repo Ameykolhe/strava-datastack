@@ -157,6 +157,8 @@ models:
         description: "Year"
       - name: month
         description: "Month number (1-12)"
+      - name: month_name
+        description: "Month name (Jan-Dec)"
       - name: activity_count
         description: "Number of activities in this month"
       - name: total_distance
