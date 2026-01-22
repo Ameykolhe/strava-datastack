@@ -3,6 +3,7 @@
 import os
 from typing import Optional
 
+import sentry_sdk
 from airflow.models import BaseOperator, Variable
 
 
@@ -39,6 +40,29 @@ class StravaExtractOperator(BaseOperator):
         start_date = None if self.extract_start_date in (None, "None", "") else self.extract_start_date
         end_date = None if self.extract_end_date in (None, "None", "") else self.extract_end_date
 
+        # Extract Airflow context for Sentry
+        dag_id = context.get("dag").dag_id if context.get("dag") else None
+        task_id = context.get("task_instance").task_id if context.get("task_instance") else None
+        run_id = context.get("run_id")
+        execution_date = str(context.get("execution_date")) if context.get("execution_date") else None
+
+        # Set Sentry context with Airflow metadata
+        with sentry_sdk.configure_scope() as scope:
+            scope.set_tag("dag_id", dag_id)
+            scope.set_tag("task_id", task_id)
+            scope.set_tag("run_id", run_id)
+            scope.set_context(
+                "airflow",
+                {
+                    "dag_id": dag_id,
+                    "task_id": task_id,
+                    "run_id": run_id,
+                    "execution_date": execution_date,
+                    "start_date": start_date,
+                    "end_date": end_date,
+                },
+            )
+
         self.log.info(
             f"Starting Strava extraction: {start_date or 'last 30 days'} to {end_date or 'today'}"
         )
@@ -49,6 +73,7 @@ class StravaExtractOperator(BaseOperator):
             client_secret = Variable.get("STRAVA_CLIENT_SECRET")
             refresh_token = Variable.get("STRAVA_REFRESH_TOKEN")
         except KeyError as e:
+            sentry_sdk.capture_exception(e)
             raise ValueError(
                 f"Missing required Airflow Variable: {e}. "
                 "Please set STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, "
@@ -60,34 +85,44 @@ class StravaExtractOperator(BaseOperator):
         os.environ["CREDENTIALS__CLIENT_SECRET"] = client_secret
         os.environ["CREDENTIALS__REFRESH_TOKEN"] = refresh_token
 
-        # Import and run pipeline
-        try:
-            from strava_extract import run_pipeline
+        # Import and run pipeline with Sentry transaction
+        with sentry_sdk.start_transaction(
+            name=f"airflow.{dag_id}.{task_id}",
+            op="airflow.task",
+            description=f"Strava extraction: {start_date or 'default'} to {end_date or 'now'}",
+        ) as transaction:
+            try:
+                from strava_extract import run_pipeline
 
-            self.log.info("Running Strava extract pipeline...")
-            load_info = run_pipeline(
-                start_date=start_date,
-                end_date=end_date,
-            )
+                self.log.info("Running Strava extract pipeline...")
+                load_info = run_pipeline(
+                    start_date=start_date,
+                    end_date=end_date,
+                )
 
-            # Log statistics
-            self.log.info(f"Pipeline completed successfully: {load_info}")
+                # Log statistics
+                self.log.info(f"Pipeline completed successfully: {load_info}")
 
-            # Return statistics for XCom
-            return {
-                "start_date": start_date,
-                "end_date": end_date,
-                "load_info": str(load_info),
-            }
+                # Set transaction status to OK
+                transaction.set_status("ok")
 
-        except Exception as e:
-            self.log.error(f"Pipeline failed: {e}")
-            raise
-        finally:
-            # Clean up environment variables
-            for key in [
-                "CREDENTIALS__CLIENT_ID",
-                "CREDENTIALS__CLIENT_SECRET",
-                "CREDENTIALS__REFRESH_TOKEN",
-            ]:
-                os.environ.pop(key, None)
+                # Return statistics for XCom
+                return {
+                    "start_date": start_date,
+                    "end_date": end_date,
+                    "load_info": str(load_info),
+                }
+
+            except Exception as e:
+                self.log.error(f"Pipeline failed: {e}")
+                sentry_sdk.capture_exception(e)
+                transaction.set_status("internal_error")
+                raise
+            finally:
+                # Clean up environment variables
+                for key in [
+                    "CREDENTIALS__CLIENT_ID",
+                    "CREDENTIALS__CLIENT_SECRET",
+                    "CREDENTIALS__REFRESH_TOKEN",
+                ]:
+                    os.environ.pop(key, None)

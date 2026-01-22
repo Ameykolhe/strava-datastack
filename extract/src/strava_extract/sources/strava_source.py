@@ -8,8 +8,9 @@ import yaml
 from dlt.common.pendulum import pendulum
 from dlt.sources.rest_api import RESTAPIConfig, rest_api_resources
 
-from ..client.paginator import RateLimitedPaginator
-from ..client.rate_limiter import RateLimiter
+from ..client.paginator import StravaPagePaginator
+from ..client.rate_limiter import RateLimiter, RateLimitExceededError
+from ..client.response_handler import create_rate_limit_response_action
 from ..config.settings import get_settings
 from ..utils.exceptions import ConfigurationError
 from ..utils.logging import get_logger
@@ -31,6 +32,12 @@ def get_rate_limiter() -> RateLimiter:
     if _rate_limiter is None:
         _rate_limiter = RateLimiter()
     return _rate_limiter
+
+
+def reset_rate_limiter() -> None:
+    """Reset the rate limiter singleton (useful for testing)."""
+    global _rate_limiter
+    _rate_limiter = None
 
 
 def load_resource_config() -> list:
@@ -59,6 +66,17 @@ def load_resource_config() -> list:
         ) from e
 
     return data.get("resources", [])
+
+
+def check_rate_limit_status() -> None:
+    """
+    Check if we can proceed or need to wait for rate limit reset.
+
+    Raises:
+        RateLimitExceededError: If daily limit was hit and should wait
+    """
+    rate_limiter = get_rate_limiter()
+    rate_limiter.check_resume_status()
 
 
 def build_rest_api_config(
@@ -103,21 +121,36 @@ def build_rest_api_config(
     # Build resources with runtime configuration
     resources = []
     for res_config in resource_configs:
+        resource_name = res_config["name"]
+
+        # Create response action for 429 handling
+        rate_limit_action = create_rate_limit_response_action(
+            rate_limiter=rate_limiter,
+            resource_name=resource_name,
+        )
+
         resource = {
-            "name": res_config["name"],
+            "name": resource_name,
             "primary_key": res_config["primary_key"],
             "endpoint": {
                 "path": res_config["endpoint"]["path"],
                 "params": res_config["endpoint"].get("params", {}).copy(),
-                "paginator": RateLimitedPaginator(
-                    rate_limiter=rate_limiter,
-                    resource_name=res_config["name"],
+                "paginator": StravaPagePaginator(
+                    resource_name=resource_name,
                     base_page=settings.pagination.base_page,
                     total_path=None,
                     maximum_page=res_config["endpoint"]
                     .get("pagination", {})
                     .get("maximum_page"),
                 ),
+                # Add response actions including rate limit handler
+                "response_actions": [
+                    # Handle 429 rate limits reactively
+                    {
+                        "status_code": 429,
+                        "action": rate_limit_action,
+                    },
+                ],
             },
         }
 
@@ -134,10 +167,11 @@ def build_rest_api_config(
         if "columns" in res_config:
             resource["columns"] = res_config["columns"]
 
+        # Add additional response actions from config (like 404 handling)
         if "response_actions" in res_config["endpoint"]:
-            resource["endpoint"]["response_actions"] = res_config["endpoint"][
-                "response_actions"
-            ]
+            for action in res_config["endpoint"]["response_actions"]:
+                resource["endpoint"]["response_actions"].append(action)
+
         if "data_selector" in res_config["endpoint"]:
             resource["endpoint"]["data_selector"] = res_config["endpoint"][
                 "data_selector"
@@ -196,6 +230,10 @@ def strava_source(start_date: Optional[str] = None, end_date: Optional[str] = No
     - activity_segment_efforts: Segment efforts per activity
     - segments: Segment metadata referenced by efforts
 
+    Rate limiting is handled reactively:
+    - On first 429: Sleep 15 minutes then retry
+    - On second 429 for same request: Save state and wait 24 hours
+
     Args:
         start_date: ISO date string for start of data range (e.g., '2024-01-01').
                    If None, uses incremental state or default lookback period.
@@ -204,8 +242,14 @@ def strava_source(start_date: Optional[str] = None, end_date: Optional[str] = No
 
     Yields:
         DLT resources for Strava data.
+
+    Raises:
+        RateLimitExceededError: If daily rate limit is exceeded
     """
     logger.info(f"Building Strava source (start={start_date}, end={end_date})")
+
+    # Check if we should wait for rate limit reset before starting
+    check_rate_limit_status()
 
     config = build_rest_api_config(start_date, end_date)
 

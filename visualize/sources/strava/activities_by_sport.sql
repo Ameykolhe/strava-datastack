@@ -1,1 +1,1 @@
-select * from dbt_sandbox.mart_activities_by_sport
+select * from dbt_sandbox.rpt_activities_by_sport

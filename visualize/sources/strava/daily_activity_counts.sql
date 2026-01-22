@@ -1,1 +1,1 @@
-select * from dbt_sandbox.mart_daily_activity_counts
+select * from dbt_sandbox.rpt_daily_activity_counts

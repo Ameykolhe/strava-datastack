@@ -1,0 +1,12 @@
+{
+  "total_requests_today": 0,
+  "requests_since_last_429": 0,
+  "day_start": "2026-01-22T17:11:52.546687",
+  "last_429_time": "2026-01-22T17:28:15.736887",
+  "resume_after": "2026-01-23T17:28:15.738564",
+  "current_request_retries": 2,
+  "current_request_url": "https://www.strava.com/api/v3/activities?per_page=200&after=1766448000&page=1",
+  "last_successful_activity_id": null,
+  "last_successful_resource": "activities",
+  "pipeline_state": {}
+}

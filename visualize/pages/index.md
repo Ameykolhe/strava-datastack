@@ -111,3 +111,5 @@ where activity_year = ${inputs.trend_year_filter.value}
     <Column id=moving_seconds title="Time"/>
     <Column id=elevation_gain title="Elev (ft)" fmt="#,##0"/>
 </DataTable>
+
+<StravaBadge />

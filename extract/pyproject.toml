@@ -16,6 +16,9 @@ dependencies = [
     "psutil>=6.1.1",
     "tqdm>=4.67.1",
     "pendulum>=3.0.0",
+
+    # Observability
+    "sentry-sdk>=2.0.0",
 ]
 
 [project.optional-dependencies]

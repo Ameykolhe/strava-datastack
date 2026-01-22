@@ -6,10 +6,18 @@ from typing import Optional
 import dlt
 from dlt.common.pipeline import LoadInfo
 
+from .client.rate_limiter import RateLimitExceededError
 from .config.settings import get_settings
 from .sources.strava_source import strava_source
 from .utils.exceptions import PipelineError
 from .utils.logging import get_logger, set_trace_id, setup_logging
+from .utils.sentry import (
+    add_breadcrumb,
+    capture_exception,
+    set_sentry_context,
+    sentry_span,
+    start_transaction,
+)
 from .utils.validators import validate_date_range, validate_date_string
 
 logger = get_logger(__name__)
@@ -94,29 +102,94 @@ class StravaPipeline:
         start_time = datetime.utcnow()
         logger.info(f"Starting pipeline execution (trace_id={self.trace_id})")
 
-        try:
-            # Create pipeline
-            pipeline = self._create_pipeline()
+        # Set Sentry context for this pipeline run
+        set_sentry_context(
+            trace_id=self.trace_id,
+            start_date=self.start_date,
+            end_date=self.end_date,
+            pipeline_name=self.settings.pipeline.name,
+        )
 
-            # Create source
-            source = strava_source(start_date=self.start_date, end_date=self.end_date)
+        # Start a Sentry transaction for the entire pipeline run
+        with start_transaction(
+            name="strava_pipeline.run",
+            op="pipeline",
+            description=f"Extract activities from {self.start_date or 'default'} to {self.end_date or 'now'}",
+        ) as transaction:
+            try:
+                # Create pipeline
+                add_breadcrumb(
+                    message="Creating DLT pipeline",
+                    category="pipeline",
+                    level="info",
+                    data={"pipeline_name": self.settings.pipeline.name},
+                )
+                with sentry_span("pipeline.create", "Creating DLT pipeline"):
+                    pipeline = self._create_pipeline()
 
-            # Run pipeline
-            logger.info("Executing pipeline run...")
-            load_info = pipeline.run(source)
+                # Create source
+                add_breadcrumb(
+                    message="Creating Strava source",
+                    category="pipeline",
+                    level="info",
+                    data={"start_date": self.start_date, "end_date": self.end_date},
+                )
+                with sentry_span(
+                    "pipeline.source",
+                    "Creating Strava source",
+                    data={"start_date": self.start_date, "end_date": self.end_date},
+                ):
+                    source = strava_source(start_date=self.start_date, end_date=self.end_date)
 
-            # Log results
-            duration = (datetime.utcnow() - start_time).total_seconds()
-            logger.info(f"Pipeline completed successfully in {duration:.2f}s")
+                # Run pipeline
+                logger.info("Executing pipeline run...")
+                add_breadcrumb(
+                    message="Executing pipeline run",
+                    category="pipeline",
+                    level="info",
+                )
+                with sentry_span("pipeline.execute", "Executing DLT pipeline"):
+                    load_info = pipeline.run(source)
 
-            return load_info
+                # Log results
+                duration = (datetime.utcnow() - start_time).total_seconds()
+                logger.info(f"Pipeline completed successfully in {duration:.2f}s")
 
-        except Exception as e:
-            duration = (datetime.utcnow() - start_time).total_seconds()
-            logger.error(f"Pipeline failed after {duration:.2f}s: {e}", exc_info=True)
+                add_breadcrumb(
+                    message=f"Pipeline completed in {duration:.2f}s",
+                    category="pipeline",
+                    level="info",
+                    data={"duration_seconds": duration},
+                )
 
-            # Fail fast - raise immediately
-            raise PipelineError(f"Pipeline execution failed: {e}") from e
+                # Set transaction status to OK
+                if transaction:
+                    transaction.set_status("ok")
+
+                return load_info
+
+            except RateLimitExceededError as e:
+                # Let rate limit errors bubble up - they have special handling
+                duration = (datetime.utcnow() - start_time).total_seconds()
+                logger.warning(f"Pipeline stopped after {duration:.2f}s due to rate limiting")
+
+                # Mark transaction as resource_exhausted (not an error)
+                if transaction:
+                    transaction.set_status("resource_exhausted")
+
+                raise
+
+            except Exception as e:
+                duration = (datetime.utcnow() - start_time).total_seconds()
+                logger.error(f"Pipeline failed after {duration:.2f}s: {e}", exc_info=True)
+
+                # Capture exception and mark transaction as failed
+                capture_exception(e)
+                if transaction:
+                    transaction.set_status("internal_error")
+
+                # Fail fast - raise immediately
+                raise PipelineError(f"Pipeline execution failed: {e}") from e
 
 
 def run_pipeline(

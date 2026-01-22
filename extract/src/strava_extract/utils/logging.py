@@ -68,10 +68,13 @@ def setup_logging(
     """
     Configure application logging.
 
+    Logs are always output to console. If log_file is specified,
+    logs are also written to the file (dual output).
+
     Args:
         level: Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL).
         format_type: Format type ("json" or "text").
-        log_file: Optional log file path. If None, logs to stdout.
+        log_file: Optional log file path. If specified, logs to both console and file.
     """
     # Get root logger
     root_logger = logging.getLogger()
@@ -80,22 +83,23 @@ def setup_logging(
     # Remove existing handlers
     root_logger.handlers.clear()
 
-    # Create handler
-    handler: logging.Handler
-    if log_file:
-        handler = logging.FileHandler(log_file)
-    else:
-        handler = logging.StreamHandler(sys.stdout)
-
-    # Set formatter
+    # Set formatter based on format type
     formatter: logging.Formatter
     if format_type == "json":
         formatter = JSONFormatter()
     else:
         formatter = TextFormatter()
 
-    handler.setFormatter(formatter)
-    root_logger.addHandler(handler)
+    # Always add console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(formatter)
+    root_logger.addHandler(console_handler)
+
+    # Add file handler if log_file is specified (dual output)
+    if log_file:
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setFormatter(formatter)
+        root_logger.addHandler(file_handler)
 
     # Silence noisy third-party loggers
     logging.getLogger("urllib3").setLevel(logging.WARNING)

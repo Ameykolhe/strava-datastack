@@ -23,10 +23,22 @@ class APIConfig(BaseModel):
 class RateLimitConfig(BaseModel):
     """Rate limiting configuration settings."""
 
-    max_requests: int = 95
-    period_minutes: int = 15
-    enable_rate_limiter: bool = True
+    # Strava API limits
+    short_term_limit: int = 100  # 100 requests per 15 minutes
+    daily_limit: int = 1000  # 1000 requests per day
+
+    # Sleep durations when rate limited
+    short_term_sleep_minutes: int = 15  # Sleep when 15-min limit hit
+    daily_sleep_hours: int = 24  # Sleep when daily limit hit
+
+    # Retry configuration
+    max_retries_before_daily_wait: int = 1  # Retries before assuming daily limit
+
+    # UI options
     show_progress_bar: bool = True
+
+    # State persistence
+    state_file: Optional[str] = None  # Path to rate limit state file
 
 
 class PaginationConfig(BaseModel):
@@ -60,6 +72,17 @@ class LoggingConfig(BaseModel):
     format: Literal["json", "text"] = "text"
     log_file: Optional[str] = None
     include_trace_id: bool = True
+
+
+class SentryConfig(BaseModel):
+    """Sentry observability configuration settings."""
+
+    enabled: bool = False
+    dsn: Optional[str] = None
+    traces_sample_rate: float = 1.0
+    profiles_sample_rate: float = 0.1
+    enable_tracing: bool = True
+    enable_profiling: bool = False
 
 
 class StravaCredentials(BaseSettings):
@@ -97,6 +120,7 @@ class Settings(BaseSettings):
     pipeline: PipelineConfig = Field(default_factory=PipelineConfig)
     incremental: IncrementalConfig = Field(default_factory=IncrementalConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
+    sentry: SentryConfig = Field(default_factory=SentryConfig)
 
     environment: Literal["development", "staging", "production"] = Field(
         default="development", description="Deployment environment"

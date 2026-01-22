@@ -9,10 +9,16 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
+from .client.rate_limiter import RateLimitExceededError  # noqa: E402
 from .config.settings import get_settings  # noqa: E402
 from .pipeline import run_pipeline  # noqa: E402
 from .utils.exceptions import StravaExtractError  # noqa: E402
-from .utils.logging import get_logger, setup_logging  # noqa: E402
+from .utils.logging import get_logger, get_trace_id, setup_logging  # noqa: E402
+from .utils.sentry import (  # noqa: E402
+    capture_exception,
+    init_sentry_from_settings,
+    set_sentry_context,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -92,7 +98,7 @@ def main() -> int:
         os.environ["STRAVA_CONFIG_PATH"] = args.config
 
     try:
-        # Setup logging
+        # Setup logging first
         settings = get_settings()
         log_level = args.log_level or settings.logging.level
         setup_logging(
@@ -102,6 +108,20 @@ def main() -> int:
         )
 
         logger = get_logger(__name__)
+
+        # Initialize Sentry early (after settings are loaded)
+        sentry_enabled = init_sentry_from_settings()
+        if sentry_enabled:
+            logger.info("Sentry observability enabled")
+
+        # Set Sentry context for this pipeline run
+        set_sentry_context(
+            trace_id=get_trace_id(),
+            start_date=args.start_date,
+            end_date=args.end_date,
+            pipeline_name=settings.pipeline.name,
+        )
+
         logger.info("Starting Strava extraction pipeline")
 
         # Run pipeline
@@ -116,7 +136,33 @@ def main() -> int:
 
         return 0
 
+    except RateLimitExceededError as e:
+        # Special handling for rate limit exceeded - save state and inform user
+        # Capture as warning (not error) since this is expected behavior
+        capture_exception(
+            e,
+            level="warning",
+            extra={"resume_after": e.resume_after.isoformat()},
+        )
+
+        try:
+            logger = get_logger(__name__)
+            logger.warning(f"Rate limit exceeded: {e}")
+        except Exception:
+            pass
+
+        print("\n" + "=" * 80, file=sys.stderr)
+        print("RATE LIMIT EXCEEDED - Daily limit reached (1000 requests/day)", file=sys.stderr)
+        print("=" * 80, file=sys.stderr)
+        print(f"\nPipeline state has been saved for resumption.", file=sys.stderr)
+        print(f"Resume after: {e.resume_after.isoformat()}", file=sys.stderr)
+        print("\nRun the pipeline again after the specified time to continue.\n", file=sys.stderr)
+        return 2  # Special exit code for rate limit
+
     except StravaExtractError as e:
+        # Capture known errors
+        capture_exception(e, level="error")
+
         # Setup basic logging if it failed during initialization
         try:
             logger = get_logger(__name__)
@@ -138,6 +184,9 @@ def main() -> int:
         return 130  # Standard exit code for SIGINT
 
     except Exception as e:
+        # Capture unexpected errors (highest priority)
+        capture_exception(e, level="fatal")
+
         try:
             logger = get_logger(__name__)
             logger.error(f"Unexpected error: {e}", exc_info=True)

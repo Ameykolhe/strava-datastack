@@ -1,6 +1,5 @@
 """Pytest fixtures and configuration for Strava extract tests."""
 
-from datetime import timedelta
 from pathlib import Path
 from typing import Generator
 from unittest.mock import Mock, patch
@@ -26,9 +25,13 @@ def test_config() -> Settings:
             "retry_attempts": 2,
         },
         "rate_limiting": {
-            "max_requests": 5,
-            "period_minutes": 1,
+            "short_term_limit": 100,
+            "daily_limit": 1000,
+            "short_term_sleep_minutes": 1,  # Short for testing
+            "daily_sleep_hours": 1,  # Short for testing
+            "max_retries_before_daily_wait": 1,
             "show_progress_bar": False,
+            "state_file": None,
         },
         "pagination": {
             "default_page_size": 50,
@@ -66,14 +69,19 @@ def test_credentials() -> StravaCredentials:
 
 
 @pytest.fixture
-def rate_limiter() -> RateLimiter:
+def rate_limiter(tmp_path: Path, test_config: Settings) -> RateLimiter:
     """
     Provide rate limiter for testing.
+
+    Args:
+        tmp_path: Pytest tmp_path fixture for state file.
+        test_config: Test configuration fixture.
 
     Returns:
         RateLimiter instance with test settings.
     """
-    return RateLimiter(max_requests=5, period=timedelta(seconds=1), show_progress=False)
+    state_file = tmp_path / "test_rate_limit_state.json"
+    return RateLimiter(show_progress=False, state_file=str(state_file))
 
 
 @pytest.fixture
@@ -180,8 +188,11 @@ api:
   timeout_seconds: 5
 
 rate_limiting:
-  max_requests: 10
-  period_minutes: 1
+  short_term_limit: 100
+  daily_limit: 1000
+  short_term_sleep_minutes: 1
+  daily_sleep_hours: 1
+  max_retries_before_daily_wait: 1
   show_progress_bar: false
 
 logging:

@@ -8,12 +8,24 @@ api:
   retry_attempts: 3
   retry_backoff_factor: 2.0
 
-# Rate Limiting Configuration
+# Rate Limiting Configuration (Reactive approach - only sleeps on 429)
 rate_limiting:
-  max_requests: 95  # Strava allows 100/15min, using 95 for safety margin
-  period_minutes: 15
-  enable_rate_limiter: true
+  # Strava API limits
+  short_term_limit: 100      # 100 requests per 15 minutes
+  daily_limit: 1000          # 1000 requests per day
+
+  # Sleep durations when rate limited
+  short_term_sleep_minutes: 15  # Sleep when 15-min limit hit (first 429)
+  daily_sleep_hours: 24         # Sleep when daily limit hit (second 429)
+
+  # Retry configuration
+  max_retries_before_daily_wait: 1  # Retries before assuming daily limit
+
+  # UI options
   show_progress_bar: true
+
+  # State persistence (null uses default: .rate_limit_state.json)
+  state_file: null
 
 # Pagination Configuration
 pagination:
@@ -37,5 +49,15 @@ incremental:
 logging:
   level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
   format: "text"  # Options: json (structured), text (human-readable)
-  log_file: null  # Optional: specify path for file logging, null for stdout only
+  log_file: "logs/strava_extract.log"  # Logs to both console and this file
   include_trace_id: true
+
+# Sentry Configuration (Observability)
+# Set SENTRY_DSN environment variable to enable (get DSN from https://sentry.io)
+sentry:
+  enabled: true  # Set to true and provide DSN to enable Sentry
+  dsn: null  # Override via SENTRY_DSN env var or STRAVA__SENTRY__DSN
+  traces_sample_rate: 1.0  # Sample rate for performance tracing (0.0 to 1.0)
+  profiles_sample_rate: 0.1  # Sample rate for profiling (0.0 to 1.0)
+  enable_tracing: true  # Enable performance tracing
+  enable_profiling: false  # Enable profiling (requires tracing)
