@@ -13,6 +13,7 @@ wheels/
 *.egg-info
 
 # ignore logs
+logs/
 *.log
 
 # ignore vscode
@@ -21,6 +22,7 @@ wheels/
 # ignore duckdb
 *.duckdb
 *.wal
+*.backup
 
 # ignore dbt
 transform/target/
@@ -36,4 +38,4 @@ transform/logs/
 visualize/node_modules/
 visualize/.evidence/template/
 visualize/.svelte-kit/
-visualize/build/
+visualize/build/!/airflow/data/strava_datastack.duckdb.backup
