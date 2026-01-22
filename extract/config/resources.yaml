@@ -59,3 +59,38 @@ resources:
       pagination:
         maximum_page: 1
     include_from_parent: ["id"]
+
+  - name: "activity_segment_efforts"
+    primary_key: "id"
+    endpoint:
+      path: "activities/{activity_id}"
+      params:
+        activity_id:
+          type: "resolve"
+          resource: "activities"
+          field: "id"
+      data_selector: "$.segment_efforts[*]"
+      response_actions:
+        - status_code: 404
+          content: "Not Found"
+          action: "ignore"
+      pagination:
+        maximum_page: 1
+    include_from_parent: ["id"]
+
+  - name: "segments"
+    primary_key: "id"
+    endpoint:
+      path: "segments/{segment_id}"
+      params:
+        segment_id:
+          type: "resolve"
+          resource: "activity_segment_efforts"
+          field: "segment.id"
+      response_actions:
+        - status_code: 404
+          content: "Not Found"
+          action: "ignore"
+      pagination:
+        maximum_page: 1
+    include_from_parent: ["id"]

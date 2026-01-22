@@ -138,6 +138,10 @@ def build_rest_api_config(
             resource["endpoint"]["response_actions"] = res_config["endpoint"][
                 "response_actions"
             ]
+        if "data_selector" in res_config["endpoint"]:
+            resource["endpoint"]["data_selector"] = res_config["endpoint"][
+                "data_selector"
+            ]
 
         # Add incremental configuration if enabled
         if res_config.get("incremental", {}).get("enabled"):
@@ -189,6 +193,8 @@ def strava_source(start_date: Optional[str] = None, end_date: Optional[str] = No
     - activities: Activity metadata
     - activity_streams: Time-series data (heart rate, speed, etc.)
     - activity_zones: Heart rate/power zones
+    - activity_segment_efforts: Segment efforts per activity
+    - segments: Segment metadata referenced by efforts
 
     Args:
         start_date: ISO date string for start of data range (e.g., '2024-01-01').
