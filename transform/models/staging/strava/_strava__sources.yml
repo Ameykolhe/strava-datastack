@@ -1,0 +1,41 @@
+version: 2
+
+sources:
+  - name: strava_raw
+    description: Raw Strava data ingested via dlt pipeline
+    database: strava_datastack
+    schema: strava_raw
+    tables:
+      - name: activities
+        description: Raw activity data from Strava API
+        columns:
+          - name: id
+            description: Strava activity ID (primary key)
+            tests:
+              - unique
+              - not_null
+
+      - name: activity_segment_efforts
+        description: Segment efforts recorded during activities
+        columns:
+          - name: id
+            description: Segment effort ID (primary key)
+            tests:
+              - unique
+              - not_null
+          - name: _activities_id
+            description: Foreign key to activities table
+
+      - name: activity_streams
+        description: Time-series stream data for activities (one row per activity per stream type)
+        columns:
+          - name: _activities_id
+            description: Foreign key to activities table
+          - name: type
+            description: Stream type (altitude, distance, heartrate, etc.)
+
+      - name: _dlt_loads
+        description: dlt pipeline load metadata
+        columns:
+          - name: load_id
+            description: Unique load identifier

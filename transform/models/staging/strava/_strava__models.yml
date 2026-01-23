@@ -1,0 +1,90 @@
+version: 2
+
+models:
+  - name: stg_strava__activities
+    description: |
+      Staging model for Strava activities.
+      Grain: One row per activity.
+    columns:
+      - name: activity_id
+        description: Strava activity ID (primary key)
+        tests:
+          - unique
+          - not_null
+      - name: athlete_id
+        description: Strava athlete ID
+      - name: sport_type
+        description: Sport type classification
+        tests:
+          - accepted_values:
+              values: ['Ride', 'Run', 'Walk', 'Hike', 'Workout', 'Badminton', 'EBikeRide', 'Pickleball']
+      - name: started_at
+        description: Activity start timestamp (UTC)
+      - name: started_at_local
+        description: Activity start timestamp (local timezone)
+      - name: distance_meters
+        description: Total distance in meters
+      - name: moving_time_seconds
+        description: Moving time in seconds
+      - name: elapsed_time_seconds
+        description: Elapsed time in seconds
+      - name: elevation_gain_meters
+        description: Total elevation gain in meters
+
+  - name: stg_strava__activity_segment_efforts
+    description: |
+      Staging model for segment efforts recorded during activities.
+      Grain: One row per segment effort.
+    columns:
+      - name: effort_id
+        description: Segment effort ID (primary key)
+        tests:
+          - unique
+          - not_null
+      - name: activity_id
+        description: Foreign key to activities
+        tests:
+          - not_null
+      - name: segment_id
+        description: Foreign key to segments
+        tests:
+          - not_null
+      - name: elapsed_time_seconds
+        description: Time to complete the segment in seconds
+      - name: pr_rank
+        description: Personal record rank (1 = PR, 2 = 2nd best, 3 = 3rd best, null = not top 3)
+      - name: kom_rank
+        description: King/Queen of Mountain rank on this segment
+
+  - name: stg_strava__activity_streams
+    description: |
+      Staging model for activity time-series stream data.
+      Grain: One row per activity per stream type.
+    columns:
+      - name: activity_id
+        description: Foreign key to activities
+        tests:
+          - not_null
+      - name: stream_type
+        description: Type of stream data
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['altitude', 'distance', 'grade_smooth', 'heartrate', 'latlng', 'moving', 'time', 'velocity_smooth']
+      - name: data_point_count
+        description: Number of data points in the stream
+      - name: stream_data
+        description: JSON array containing the stream values
+
+  - name: stg_strava__dlt_loads
+    description: |
+      Staging model for dlt pipeline load metadata.
+      Grain: One row per load.
+    columns:
+      - name: load_id
+        description: Unique load identifier (primary key)
+        tests:
+          - unique
+          - not_null
+      - name: loaded_at
+        description: Timestamp when the load was inserted

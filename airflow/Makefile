@@ -102,7 +102,7 @@ reset:  ## Reset Airflow (clean + init)
 	@echo "Resetting Airflow environment..."
 	$(MAKE) clean
 	$(MAKE) build
-	$(MAKE) init
+	$(MAKE) up
 
 ps:  ## Show status of all services
 	docker compose ps

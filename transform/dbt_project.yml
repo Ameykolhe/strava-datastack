@@ -1,16 +1,8 @@
-
-# Name your project! Project names should contain only lowercase characters
-# and underscores. A good package name should reflect your organization's
-# name or the intended use of these models
 name: 'strava_transform'
 version: '1.0.0'
 
-# This setting configures which "profile" dbt uses for this project.
 profile: 'strava_transform'
 
-# These configurations specify where dbt should look for different types of files.
-# The `model-paths` config, for example, states that models in this project can be
-# found in the "models/" directory. You probably won't need to change these!
 model-paths: ["models"]
 analysis-paths: ["analyses"]
 test-paths: ["tests"]
@@ -18,22 +10,36 @@ seed-paths: ["seeds"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 
-clean-targets:         # directories to be removed by `dbt clean`
+clean-targets:
   - "target"
   - "dbt_packages"
 
 flags:
-  send_anonymous_usage_stats: False
-  use_colors: True
+  send_anonymous_usage_stats: false
+  use_colors: true
 
-# Configuring models
-# Full documentation: https://docs.getdbt.com/docs/configuring-models
+vars:
+  # Default timezone for local time conversions
+  local_timezone: 'America/New_York'
 
 models:
   strava_transform:
-    core:
-      +materialized: table
-    intermediate:
-      +materialized: view
+    +tags: ["strava"]
+
     staging:
       +materialized: view
+      +tags: ["staging"]
+      +schema: staging
+
+    intermediate:
+      +materialized: view
+      +tags: ["intermediate"]
+      +schema: intermediate
+      # Override for incremental models
+      int_strava__activity_stream_points:
+        +materialized: incremental
+
+    marts:
+      +materialized: table
+      +tags: ["marts"]
+      +schema: marts

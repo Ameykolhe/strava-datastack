@@ -1,0 +1,92 @@
+version: 2
+
+models:
+  - name: int_strava__activity_streams
+    description: |
+      Pivots activity streams from long to wide format.
+      Grain: One row per activity.
+    columns:
+      - name: activity_id
+        description: Activity ID (primary key)
+        tests:
+          - unique
+          - not_null
+      - name: time_stream
+        description: JSON array of elapsed seconds at each data point
+      - name: distance_stream
+        description: JSON array of cumulative distance in meters
+      - name: altitude_stream
+        description: JSON array of altitude in meters
+      - name: velocity_stream
+        description: JSON array of smoothed velocity in m/s
+      - name: heartrate_stream
+        description: JSON array of heart rate in BPM
+      - name: grade_stream
+        description: JSON array of smoothed grade percentage
+      - name: latlng_stream
+        description: JSON array of [latitude, longitude] pairs
+      - name: moving_stream
+        description: JSON array of boolean moving flags
+      - name: data_point_count
+        description: Number of data points in the activity
+
+  - name: int_strava__activity_stream_points
+    description: |
+      Unnests activity streams into individual data points for time-series analysis.
+      Grain: One row per activity per point index.
+    columns:
+      - name: activity_id
+        description: Activity ID (composite primary key)
+        tests:
+          - not_null
+      - name: point_index
+        description: Zero-based index of the data point (composite primary key)
+        tests:
+          - not_null
+      - name: time_seconds
+        description: Elapsed time in seconds from activity start
+      - name: distance_meters
+        description: Cumulative distance from activity start in meters
+      - name: altitude_meters
+        description: Altitude at this point in meters
+      - name: velocity_mps
+        description: Smoothed velocity at this point in m/s
+      - name: heartrate_bpm
+        description: Heart rate at this point in BPM
+      - name: grade_percent
+        description: Smoothed grade at this point as percentage
+      - name: latitude
+        description: Latitude coordinate
+      - name: longitude
+        description: Longitude coordinate
+      - name: is_moving
+        description: Whether the athlete was moving at this point
+
+  - name: int_strava__segments
+    description: |
+      Extracts unique segments from segment efforts.
+      Grain: One row per segment.
+    columns:
+      - name: segment_id
+        description: Strava segment ID (primary key)
+        tests:
+          - unique
+          - not_null
+      - name: segment_name
+        description: Name of the segment
+      - name: segment_activity_type
+        description: Activity type for this segment (Ride, Run, etc.)
+      - name: segment_distance_meters
+        description: Length of the segment in meters
+      - name: segment_average_grade
+        description: Average grade of the segment as percentage
+      - name: segment_maximum_grade
+        description: Maximum grade of the segment as percentage
+      - name: segment_climb_category
+        description: Climb category (0 = not categorized, 1-5 = HC to Cat 4)
+      - name: segment_city
+        description: City where the segment is located
+      - name: segment_state
+        description: State/province where the segment is located
+      - name: segment_country
+        description: Country where the segment is located

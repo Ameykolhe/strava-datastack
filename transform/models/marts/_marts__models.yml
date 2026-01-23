@@ -1,0 +1,112 @@
+version: 2
+
+models:
+  - name: dim_strava__segments
+    description: |
+      Dimension table for Strava segments.
+      Grain: One row per segment.
+    columns:
+      - name: segment_id
+        description: Strava segment ID (primary key)
+        tests:
+          - unique
+          - not_null
+      - name: segment_name
+        description: Name of the segment
+      - name: segment_activity_type
+        description: Activity type for this segment
+        tests:
+          - accepted_values:
+              values: ['Ride', 'Run', 'Walk', 'Hike', 'EBikeRide']
+      - name: segment_distance_meters
+        description: Length of the segment in meters
+      - name: segment_average_grade
+        description: Average grade as percentage
+      - name: climb_category_name
+        description: Human-readable climb category
+
+  - name: fct_strava__activities
+    description: |
+      Fact table for Strava activities with enriched metrics.
+      Grain: One row per activity.
+    columns:
+      - name: activity_id
+        description: Activity ID (primary key)
+        tests:
+          - unique
+          - not_null
+      - name: athlete_id
+        description: Athlete ID
+        tests:
+          - not_null
+      - name: sport_type
+        description: Sport type classification
+        tests:
+          - accepted_values:
+              values: ['Ride', 'Run', 'Walk', 'Hike', 'Workout', 'Badminton', 'EBikeRide', 'Pickleball']
+      - name: activity_date
+        description: Date of the activity (local time)
+      - name: distance_meters
+        description: Total distance in meters
+      - name: moving_time_seconds
+        description: Moving time in seconds
+      - name: elevation_gain_meters
+        description: Total elevation gain in meters
+
+  - name: fct_strava__segment_efforts
+    description: |
+      Fact table for segment efforts.
+      Grain: One row per segment effort.
+    columns:
+      - name: effort_id
+        description: Segment effort ID (primary key)
+        tests:
+          - unique
+          - not_null
+      - name: activity_id
+        description: Foreign key to activities
+        tests:
+          - not_null
+          - relationships:
+              to: ref('fct_strava__activities')
+              field: activity_id
+      - name: segment_id
+        description: Foreign key to segments
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_strava__segments')
+              field: segment_id
+      - name: elapsed_time_seconds
+        description: Time to complete the segment
+      - name: pr_rank
+        description: Personal record rank (1 = PR)
+      - name: is_pr
+        description: Boolean flag indicating if this is a PR
+
+  - name: fct_strava__activity_data_points
+    description: |
+      Fact table for activity time-series data points.
+      Grain: One row per activity per data point.
+    columns:
+      - name: activity_id
+        description: Activity ID (composite primary key)
+        tests:
+          - not_null
+          - relationships:
+              to: ref('fct_strava__activities')
+              field: activity_id
+      - name: point_index
+        description: Data point index (composite primary key)
+        tests:
+          - not_null
+      - name: time_seconds
+        description: Elapsed time from activity start
+      - name: distance_meters
+        description: Cumulative distance from start
+      - name: heartrate_bpm
+        description: Heart rate at this point
+      - name: latitude
+        description: GPS latitude
+      - name: longitude
+        description: GPS longitude
