@@ -9,5 +9,17 @@ else
     echo "Warning: /opt/airflow/extract directory not found"
 fi
 
+# Health check: ensure strava_extract is importable before starting Airflow
+python - <<'PY'
+import importlib
+import sys
+
+try:
+    importlib.import_module("strava_extract")
+except Exception as exc:
+    print(f"ERROR: strava_extract not importable: {exc}", file=sys.stderr)
+    sys.exit(1)
+PY
+
 # Execute the original Airflow entrypoint with all arguments
 exec /entrypoint "$@"

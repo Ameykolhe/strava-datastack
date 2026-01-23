@@ -47,7 +47,7 @@ def init_sentry(
     # Configure logging integration to capture breadcrumbs
     logging_integration = LoggingIntegration(
         level=None,  # Capture all log levels as breadcrumbs
-        event_level=None,  # Don't send logs as events (we handle errors manually)
+        event_level="INFO",  # Send info+ logs as events
     )
 
     sentry_sdk.init(

@@ -36,6 +36,23 @@ class StravaExtractOperator(BaseOperator):
 
     def execute(self, context):
         """Execute the extraction pipeline."""
+        trace_ctx = context.get("ti").xcom_pull(task_ids="start_trace") if context.get("ti") else None
+        if isinstance(trace_ctx, dict):
+            if trace_ctx.get("sentry_trace"):
+                os.environ["SENTRY_TRACE"] = trace_ctx["sentry_trace"]
+            if trace_ctx.get("sentry_baggage"):
+                os.environ["SENTRY_BAGGAGE"] = trace_ctx["sentry_baggage"]
+
+        try:
+            from strava_extract.utils.sentry import init_sentry_from_settings
+        except ModuleNotFoundError:
+            init_sentry_from_settings = None
+
+        if init_sentry_from_settings:
+            sentry_enabled = init_sentry_from_settings()
+            if sentry_enabled:
+                self.log.info("Sentry observability enabled for Airflow task")
+
         # Handle Jinja2 templating converting None to "None" string
         start_date = None if self.extract_start_date in (None, "None", "") else self.extract_start_date
         end_date = None if self.extract_end_date in (None, "None", "") else self.extract_end_date
@@ -86,11 +103,26 @@ class StravaExtractOperator(BaseOperator):
         os.environ["CREDENTIALS__REFRESH_TOKEN"] = refresh_token
 
         # Import and run pipeline with Sentry transaction
-        with sentry_sdk.start_transaction(
-            name=f"airflow.{dag_id}.{task_id}",
-            op="airflow.task",
-            description=f"Strava extraction: {start_date or 'default'} to {end_date or 'now'}",
-        ) as transaction:
+        trace_headers = {}
+        if os.getenv("SENTRY_TRACE"):
+            trace_headers["sentry-trace"] = os.getenv("SENTRY_TRACE")
+        if os.getenv("SENTRY_BAGGAGE"):
+            trace_headers["baggage"] = os.getenv("SENTRY_BAGGAGE")
+
+        if trace_headers:
+            transaction = sentry_sdk.continue_trace(
+                trace_headers,
+                op="airflow.task",
+                name=f"airflow.{dag_id}.{task_id}",
+            )
+        else:
+            transaction = sentry_sdk.start_transaction(
+                name=f"airflow.{dag_id}.{task_id}",
+                op="airflow.task",
+                description=f"Strava extraction: {start_date or 'default'} to {end_date or 'now'}",
+            )
+
+        with transaction:
             try:
                 from strava_extract import run_pipeline
 

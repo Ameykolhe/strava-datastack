@@ -1,4 +1,4 @@
-.PHONY: help build init up down restart logs clean credentials trigger test-connection refresh-dags
+.PHONY: help build init up down restart logs clean reset credentials trigger refresh-dags
 
 help:  ## Show this help message
 	@echo "Airflow Docker Compose Management"
@@ -13,6 +13,7 @@ init:  ## Initialize Airflow database and create admin user
 	@echo "Initializing Airflow database..."
 	@echo "This will create default user: airflow / airflow"
 	docker compose up airflow-init
+	$(MAKE) credentials
 
 up:  ## Start all Airflow services
 	@echo "Starting Airflow services..."
@@ -20,7 +21,11 @@ up:  ## Start all Airflow services
 	@echo ""
 	@echo "Airflow is starting up..."
 	@echo "Web UI will be available at: http://localhost:8080"
-	@echo "Default credentials: airflow / airflow"
+	@if [ -f .env ]; then \
+		echo "Credentials: $$(grep _AIRFLOW_WWW_USER_USERNAME .env | cut -d '=' -f2) / $$(grep _AIRFLOW_WWW_USER_PASSWORD .env | cut -d '=' -f2)"; \
+	else \
+		echo "Default credentials: airflow / airflow"; \
+	fi
 	@echo ""
 	@echo "Run 'make logs' to follow the logs"
 	@echo "Run 'make credentials' to set up Strava credentials"
@@ -73,15 +78,6 @@ refresh-dags:  ## Refresh DAG parsing/serialization
 	@echo "Refreshing DAGs..."
 	docker compose exec airflow-scheduler airflow dags reserialize
 
-test-connection:  ## Test DuckDB connection
-	@echo "Testing DuckDB connection..."
-	docker compose exec airflow-worker python -c "\
-import duckdb; \
-conn = duckdb.connect('/opt/airflow/data/strava_datastack.duckdb'); \
-print('Connection successful!'); \
-print('Tables:', conn.execute('SHOW TABLES').fetchall()); \
-conn.close()"
-
 shell:  ## Open a shell in the Airflow worker container
 	docker compose exec airflow-worker bash
 
@@ -92,7 +88,6 @@ clean:  ## Remove all containers, volumes, and data (WARNING: destructive!)
 	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
 		docker compose down --volumes --remove-orphans; \
 		rm -rf logs/*; \
-		rm -rf data/*; \
 		echo "Cleanup complete!"; \
 	else \
 		echo "Aborted."; \
@@ -103,6 +98,7 @@ reset:  ## Reset Airflow (clean + init)
 	$(MAKE) clean
 	$(MAKE) build
 	$(MAKE) up
+	$(MAKE) credentials
 
 ps:  ## Show status of all services
 	docker compose ps
