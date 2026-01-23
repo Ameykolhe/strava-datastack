@@ -1,4 +1,4 @@
-.PHONY: help build init up down restart logs clean credentials trigger test-connection
+.PHONY: help build init up down restart logs clean credentials trigger test-connection refresh-dags
 
 help:  ## Show this help message
 	@echo "Airflow Docker Compose Management"
@@ -68,6 +68,10 @@ trigger-dates:  ## Trigger pipeline with custom dates (usage: make trigger-dates
 	@echo "Triggering pipeline for date range: $(START) to $(END)..."
 	docker compose exec airflow-worker airflow dags trigger strava_data_pipeline \
 		--conf '{"start_date": "$(START)", "end_date": "$(END)"}'
+
+refresh-dags:  ## Refresh DAG parsing/serialization
+	@echo "Refreshing DAGs..."
+	docker compose exec airflow-scheduler airflow dags reserialize
 
 test-connection:  ## Test DuckDB connection
 	@echo "Testing DuckDB connection..."

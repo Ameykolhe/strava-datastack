@@ -9,21 +9,6 @@ install:  ## Install dependencies
 install-dev:  ## Install development dependencies
 	uv sync --all-extras
 
-test:  ## Run all tests
-	pytest tests/
-
-test-unit:  ## Run unit tests only
-	pytest tests/unit/ -m unit
-
-test-integration:  ## Run integration tests only
-	pytest tests/integration/ -m integration
-
-test-e2e:  ## Run e2e tests only
-	pytest tests/e2e/ -m e2e
-
-test-coverage:  ## Run tests with HTML coverage report
-	pytest --cov=strava_extract --cov-report=html --cov-report=term
-
 lint:  ## Run linters
 	ruff check src/
 	mypy src/
@@ -46,16 +31,5 @@ run-debug:  ## Run pipeline with debug logging
 
 run-backfill:  ## Run backfill (example: 2024 data)
 	python -m strava_extract --start-date 2024-01-01 --end-date 2024-12-31
-
-check:  ## Run all checks (format, lint, test)
-	@echo "Running format check..."
-	@black --check src/ tests/
-	@isort --check src/ tests/
-	@echo "Running linter..."
-	@ruff check src/
-	@echo "Running type checker..."
-	@mypy src/
-	@echo "Running tests..."
-	@pytest tests/
 
 .DEFAULT_GOAL := help

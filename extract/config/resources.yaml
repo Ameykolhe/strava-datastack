@@ -4,6 +4,7 @@ resources:
   - name: "activities"
     primary_key: "id"
     write_disposition: "merge"
+    max_table_nesting: 0
     columns:
       location_city:
         data_type: "text"
@@ -45,6 +46,11 @@ resources:
 
   - name: "activity_zones"
     primary_key: ["_activities_id", "type"]
+    max_table_nesting: 0
+    columns:
+      score:
+        data_type: "double"
+        nullable: true
     endpoint:
       path: "activities/{activity_id}/zones"
       params:
@@ -62,6 +68,11 @@ resources:
 
   - name: "activity_segment_efforts"
     primary_key: "id"
+    max_table_nesting: 0
+    columns:
+      kom_rank:
+        data_type: "bigint"
+        nullable: true
     endpoint:
       path: "activities/{activity_id}"
       params:
@@ -70,23 +81,6 @@ resources:
           resource: "activities"
           field: "id"
       data_selector: "$.segment_efforts[*]"
-      response_actions:
-        - status_code: 404
-          content: "Not Found"
-          action: "ignore"
-      pagination:
-        maximum_page: 1
-    include_from_parent: ["id"]
-
-  - name: "segments"
-    primary_key: "id"
-    endpoint:
-      path: "segments/{segment_id}"
-      params:
-        segment_id:
-          type: "resolve"
-          resource: "activity_segment_efforts"
-          field: "segment.id"
       response_actions:
         - status_code: 404
           content: "Not Found"

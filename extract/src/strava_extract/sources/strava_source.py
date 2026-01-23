@@ -228,7 +228,6 @@ def strava_source(start_date: Optional[str] = None, end_date: Optional[str] = No
     - activity_streams: Time-series data (heart rate, speed, etc.)
     - activity_zones: Heart rate/power zones
     - activity_segment_efforts: Segment efforts per activity
-    - segments: Segment metadata referenced by efforts
 
     Rate limiting is handled reactively:
     - On first 429: Sleep 15 minutes then retry
