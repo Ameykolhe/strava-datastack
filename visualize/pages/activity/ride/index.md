@@ -6,29 +6,28 @@ title: Ride
 select
     activity_id,
     activity_name,
-    '/activity/ride/' || activity_id as activity_link,
     started_at,
-    round(distance / 1000.0, 1) as distance_km,
-    round(moving_seconds / 60.0, 0) as duration_min,
-    round(elevation_gain, 0) as elevation_m,
-    round((distance / moving_seconds) * 3.6, 1) as speed_kmh,
-    power_avg
+    distance_km,
+    moving_time_minutes,
+    elevation_gain_meters,
+    average_speed_kph,
+    average_watts,
+    activity_link
 from strava.activity_list
-where sport_type = 'Ride' and moving_seconds > 0
+where sport_type = 'Ride' and moving_time_seconds > 0
 order by started_at desc
 ```
 
 ```sql monthly_stats
 select
-    strftime(started_at, '%Y-%m') as month,
-    count(*) as rides,
-    round(sum(distance) / 1000.0, 0) as total_km,
-    round(sum(elevation_gain), 0) as total_elevation,
-    round(avg(distance / moving_seconds) * 3.6, 1) as avg_speed_kmh
-from strava.activity_list
-where sport_type = 'Ride' and moving_seconds > 0
-group by strftime(started_at, '%Y-%m')
-order by month desc
+    month_label,
+    activity_count,
+    total_distance_km,
+    total_elevation_meters,
+    avg_speed_kmh
+from strava.activity_monthly_sport
+where sport_type = 'Ride'
+order by month_start desc
 ```
 
 # Ride Activities
@@ -37,15 +36,15 @@ order by month desc
 
 <LineChart
     data={monthly_stats}
-    x=month
-    y=total_km
+    x=month_label
+    y=total_distance_km
     title="Monthly Distance (km)"
 />
 
 <BarChart
     data={monthly_stats}
-    x=month
-    y=total_elevation
+    x=month_label
+    y=total_elevation_meters
     title="Monthly Elevation Gain (m)"
 />
 
@@ -55,10 +54,10 @@ order by month desc
     <Column id=started_at title="Date"/>
     <Column id=activity_name title="Activity"/>
     <Column id=distance_km title="Distance (km)"/>
-    <Column id=duration_min title="Duration (min)"/>
-    <Column id=elevation_m title="Elevation (m)"/>
-    <Column id=speed_kmh title="Avg Speed (km/h)"/>
-    <Column id=power_avg title="Avg Power (W)"/>
+    <Column id=moving_time_minutes title="Duration (min)"/>
+    <Column id=elevation_gain_meters title="Elevation (m)"/>
+    <Column id=average_speed_kph title="Avg Speed (km/h)"/>
+    <Column id=average_watts title="Avg Power (W)"/>
 </DataTable>
 
 [Back to Activities](/activity)

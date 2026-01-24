@@ -43,3 +43,8 @@ models:
       +materialized: table
       +tags: ["marts"]
       +schema: marts
+
+    reporting:
+      +materialized: table
+      +tags: ["reporting"]
+      +schema: reporting

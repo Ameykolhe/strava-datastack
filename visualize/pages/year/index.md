@@ -3,7 +3,10 @@ title: Year in Sports
 ---
 
 ```sql distinct_years
-select * from strava.distinct_years
+select
+    activity_year,
+    max_year
+from strava.distinct_years
 order by activity_year desc
 ```
 

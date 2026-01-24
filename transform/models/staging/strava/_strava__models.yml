@@ -76,6 +76,24 @@ models:
       - name: stream_data
         description: JSON array containing the stream values
 
+  - name: stg_strava__activity_zones
+    description: |
+      Staging model for activity zone distributions.
+      Grain: One row per activity per zone type.
+    columns:
+      - name: activity_id
+        description: Foreign key to activities
+        tests:
+          - not_null
+      - name: zone_type
+        description: Zone type (heartrate, power, pace)
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['heartrate', 'power', 'pace']
+      - name: distribution_buckets
+        description: JSON array of zone buckets with min/max/time
+
   - name: stg_strava__dlt_loads
     description: |
       Staging model for dlt pipeline load metadata.

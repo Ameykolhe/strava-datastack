@@ -6,12 +6,12 @@ title: Run
 select
     activity_id,
     activity_name,
-    '/activity/run/' || activity_id as activity_link,
     started_at,
-    round(distance / 1000.0, 2) as distance_km,
-    round(moving_seconds / 60.0, 0) as duration_min,
-    round((moving_seconds / 60.0) / (distance / 1000.0), 2) as pace_min_km,
-    hr_avg
+    distance_km,
+    moving_time_minutes,
+    pace_min_per_km,
+    average_heartrate_bpm,
+    activity_link
 from strava.activity_list
 where sport_type = 'Run'
 order by started_at desc
@@ -19,14 +19,13 @@ order by started_at desc
 
 ```sql monthly_stats
 select
-    strftime(started_at, '%Y-%m') as month,
-    count(*) as runs,
-    round(sum(distance) / 1000.0, 1) as total_km,
-    round(avg(hr_avg), 0) as avg_hr
-from strava.activity_list
+    month_label,
+    activity_count,
+    total_distance_km,
+    avg_heartrate_bpm
+from strava.activity_monthly_sport
 where sport_type = 'Run'
-group by strftime(started_at, '%Y-%m')
-order by month desc
+order by month_start desc
 ```
 
 # Run Activities
@@ -35,15 +34,15 @@ order by month desc
 
 <LineChart
     data={monthly_stats}
-    x=month
-    y=total_km
+    x=month_label
+    y=total_distance_km
     title="Monthly Distance (km)"
 />
 
 <BarChart
     data={monthly_stats}
-    x=month
-    y=runs
+    x=month_label
+    y=activity_count
     title="Monthly Run Count"
 />
 
@@ -53,9 +52,9 @@ order by month desc
     <Column id=started_at title="Date"/>
     <Column id=activity_name title="Activity"/>
     <Column id=distance_km title="Distance (km)"/>
-    <Column id=duration_min title="Duration (min)"/>
-    <Column id=pace_min_km title="Pace (min/km)"/>
-    <Column id=hr_avg title="Avg HR"/>
+    <Column id=moving_time_minutes title="Duration (min)"/>
+    <Column id=pace_min_per_km title="Pace (min/km)"/>
+    <Column id=average_heartrate_bpm title="Avg HR"/>
 </DataTable>
 
 [Back to Activities](/activity)

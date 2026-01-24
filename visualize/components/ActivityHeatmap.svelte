@@ -13,7 +13,7 @@
   function resetMap() {
     if (map && initialBounds) {
       map.fitBounds(initialBounds, {
-        padding: [40, 40],
+        padding: [12, 12],
         maxZoom: 14
       });
     }
@@ -194,7 +194,7 @@
         initialBounds = L.latLngBounds(coreCoords);
 
         map.fitBounds(initialBounds, {
-          padding: [40, 40],
+          padding: [12, 12],
           maxZoom: 14
         });
       } else {
@@ -202,7 +202,7 @@
         const allCoords = activities.flatMap((a) => a.coords);
         initialBounds = L.latLngBounds(allCoords);
         map.fitBounds(initialBounds, {
-          padding: [40, 40],
+          padding: [12, 12],
           maxZoom: 14
         });
       }

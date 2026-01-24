@@ -1,5 +1,24 @@
 select
-    *,
-    '/activity/' || sport_type || '/' || activity_id as activity_link
-from dbt_sandbox.rpt_activity_list
-order by started_at desc
+    activity_id,
+    activity_name,
+    sport_type,
+    workout_type,
+    started_at,
+    started_at_local,
+    activity_date,
+    activity_year,
+    activity_month,
+    distance_km,
+    distance_miles,
+    moving_time_seconds,
+    moving_time_minutes,
+    elevation_gain_meters,
+    elevation_gain_feet,
+    average_speed_kph,
+    average_speed_mph,
+    max_speed_mph,
+    pace_min_per_km,
+    average_heartrate_bpm,
+    average_watts,
+    activity_link
+from dbt_sandbox_reporting.rpt_activity_list__activity

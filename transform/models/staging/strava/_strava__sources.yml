@@ -34,6 +34,14 @@ sources:
           - name: type
             description: Stream type (altitude, distance, heartrate, etc.)
 
+      - name: activity_zones
+        description: Activity zone distributions for heart rate, power, and pace
+        columns:
+          - name: _activities_id
+            description: Foreign key to activities table
+          - name: type
+            description: Zone type (heartrate, power, pace)
+
       - name: _dlt_loads
         description: dlt pipeline load metadata
         columns:

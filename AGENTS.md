@@ -21,3 +21,5 @@
 - Evidence source: `visualize/sources/strava/connection.yaml` points to `strava_datastack.duckdb`.
 - Airflow runtime data/logs live under `airflow/data/` and `airflow/logs/`; do not delete or rewrite unless asked.
 </INSTRUCTIONS>
+
+/Users/ameyk/.claude/projects/-Users-ameyk-PycharmProjects-strava-datastack/a95622e5-05b6-4b59-87d3-ef1363082ec0.jsonl 
