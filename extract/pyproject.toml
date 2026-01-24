@@ -17,8 +17,11 @@ dependencies = [
     "tqdm>=4.67.1",
     "pendulum>=3.0.0",
 
-    # Observability
-    "sentry-sdk>=2.0.0",
+    # OpenTelemetry
+    "opentelemetry-api>=1.23.0",
+    "opentelemetry-sdk>=1.23.0",
+    "opentelemetry-exporter-otlp>=1.23.0",
+    "opentelemetry-instrumentation-requests>=0.44b0",
 ]
 
 [project.optional-dependencies]

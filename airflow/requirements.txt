@@ -21,4 +21,10 @@ tqdm>=4.67.1
 pendulum>=3.0.0
 
 # Observability
-sentry-sdk>=2.0.0
+apache-airflow-providers-openlineage>=1.9.0
+
+# OpenTelemetry
+opentelemetry-api>=1.23.0
+opentelemetry-sdk>=1.23.0
+opentelemetry-exporter-otlp>=1.23.0
+opentelemetry-exporter-otlp-proto-grpc>=1.23.0

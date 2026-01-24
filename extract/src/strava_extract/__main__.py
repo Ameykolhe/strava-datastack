@@ -13,12 +13,8 @@ from .client.rate_limiter import RateLimitExceededError  # noqa: E402
 from .config.settings import get_settings  # noqa: E402
 from .pipeline import run_pipeline  # noqa: E402
 from .utils.exceptions import StravaExtractError  # noqa: E402
-from .utils.logging import get_logger, get_trace_id, setup_logging  # noqa: E402
-from .utils.sentry import (  # noqa: E402
-    capture_exception,
-    init_sentry_from_settings,
-    set_sentry_context,
-)
+from .utils.logging import get_logger, setup_logging  # noqa: E402
+from .utils.telemetry import TelemetryConfig, setup_telemetry  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:
@@ -75,7 +71,7 @@ Examples:
         "--log-level",
         type=str,
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        default=None,
+        default="INFO",
         help="Override log level from config",
     )
 
@@ -98,34 +94,35 @@ def main() -> int:
         os.environ["STRAVA_CONFIG_PATH"] = args.config
 
     try:
-        # Setup logging first
         settings = get_settings()
         log_level = args.log_level or settings.logging.level
+        telemetry_handlers = setup_telemetry(
+            TelemetryConfig(
+                enabled=settings.telemetry.enabled,
+                endpoint=settings.telemetry.endpoint,
+                service_name=settings.telemetry.service_name,
+                service_namespace=settings.telemetry.service_namespace,
+                environment=settings.environment,
+                enable_traces=settings.telemetry.enable_traces,
+                enable_logs=settings.telemetry.enable_logs,
+            )
+        )
         setup_logging(
             level=log_level,
             format_type=settings.logging.format,
             log_file=settings.logging.log_file,
+            include_trace_id=settings.logging.include_trace_id,
+            extra_handlers=telemetry_handlers,
         )
 
         logger = get_logger(__name__)
 
-        # Initialize Sentry early (after settings are loaded)
-        sentry_enabled = init_sentry_from_settings()
-        if sentry_enabled:
-            logger.info("Sentry observability enabled")
-
-        # Set Sentry context for this pipeline run
-        set_sentry_context(
-            trace_id=get_trace_id(),
-            start_date=args.start_date,
-            end_date=args.end_date,
-            pipeline_name=settings.pipeline.name,
-        )
-
         logger.info("Starting Strava extraction pipeline")
 
         # Run pipeline
-        load_info = run_pipeline(start_date=args.start_date, end_date=args.end_date)
+        load_info = run_pipeline(
+            start_date=args.start_date, end_date=args.end_date, configure_logging=False
+        )
 
         # Print summary
         print("\n" + "=" * 80)
@@ -138,13 +135,6 @@ def main() -> int:
 
     except RateLimitExceededError as e:
         # Special handling for rate limit exceeded - save state and inform user
-        # Capture as warning (not error) since this is expected behavior
-        capture_exception(
-            e,
-            level="warning",
-            extra={"resume_after": e.resume_after.isoformat()},
-        )
-
         try:
             logger = get_logger(__name__)
             logger.warning(f"Rate limit exceeded: {e}")
@@ -160,9 +150,6 @@ def main() -> int:
         return 2  # Special exit code for rate limit
 
     except StravaExtractError as e:
-        # Capture known errors
-        capture_exception(e, level="error")
-
         # Setup basic logging if it failed during initialization
         try:
             logger = get_logger(__name__)
@@ -184,9 +171,6 @@ def main() -> int:
         return 130  # Standard exit code for SIGINT
 
     except Exception as e:
-        # Capture unexpected errors (highest priority)
-        capture_exception(e, level="fatal")
-
         try:
             logger = get_logger(__name__)
             logger.error(f"Unexpected error: {e}", exc_info=True)

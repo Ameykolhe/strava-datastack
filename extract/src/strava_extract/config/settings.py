@@ -74,15 +74,15 @@ class LoggingConfig(BaseModel):
     include_trace_id: bool = True
 
 
-class SentryConfig(BaseModel):
-    """Sentry observability configuration settings."""
+class TelemetryConfig(BaseModel):
+    """OpenTelemetry export configuration."""
 
-    enabled: bool = False
-    dsn: Optional[str] = None
-    traces_sample_rate: float = 1.0
-    profiles_sample_rate: float = 0.1
-    enable_tracing: bool = True
-    enable_profiling: bool = False
+    enabled: bool = True
+    endpoint: str = "http://otel-collector:4318"
+    service_name: str = "strava-extract"
+    service_namespace: str = "strava-datastack"
+    enable_traces: bool = True
+    enable_logs: bool = True
 
 
 class StravaCredentials(BaseSettings):
@@ -120,7 +120,7 @@ class Settings(BaseSettings):
     pipeline: PipelineConfig = Field(default_factory=PipelineConfig)
     incremental: IncrementalConfig = Field(default_factory=IncrementalConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
-    sentry: SentryConfig = Field(default_factory=SentryConfig)
+    telemetry: TelemetryConfig = Field(default_factory=TelemetryConfig)
 
     environment: Literal["development", "staging", "production"] = Field(
         default="development", description="Deployment environment"

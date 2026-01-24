@@ -1,10 +1,13 @@
 """Custom operator for Strava data extraction."""
 
+import logging
 import os
 from typing import Optional
 
-import sentry_sdk
+import structlog
 from airflow.models import BaseOperator, Variable
+from opentelemetry import trace
+from opentelemetry.propagate import inject
 
 
 class StravaExtractOperator(BaseOperator):
@@ -36,49 +39,9 @@ class StravaExtractOperator(BaseOperator):
 
     def execute(self, context):
         """Execute the extraction pipeline."""
-        trace_ctx = context.get("ti").xcom_pull(task_ids="start_trace") if context.get("ti") else None
-        if isinstance(trace_ctx, dict):
-            if trace_ctx.get("sentry_trace"):
-                os.environ["SENTRY_TRACE"] = trace_ctx["sentry_trace"]
-            if trace_ctx.get("sentry_baggage"):
-                os.environ["SENTRY_BAGGAGE"] = trace_ctx["sentry_baggage"]
-
-        try:
-            from strava_extract.utils.sentry import init_sentry_from_settings
-        except ModuleNotFoundError:
-            init_sentry_from_settings = None
-
-        if init_sentry_from_settings:
-            sentry_enabled = init_sentry_from_settings()
-            if sentry_enabled:
-                self.log.info("Sentry observability enabled for Airflow task")
-
         # Handle Jinja2 templating converting None to "None" string
         start_date = None if self.extract_start_date in (None, "None", "") else self.extract_start_date
         end_date = None if self.extract_end_date in (None, "None", "") else self.extract_end_date
-
-        # Extract Airflow context for Sentry
-        dag_id = context.get("dag").dag_id if context.get("dag") else None
-        task_id = context.get("task_instance").task_id if context.get("task_instance") else None
-        run_id = context.get("run_id")
-        execution_date = str(context.get("execution_date")) if context.get("execution_date") else None
-
-        # Set Sentry context with Airflow metadata
-        with sentry_sdk.configure_scope() as scope:
-            scope.set_tag("dag_id", dag_id)
-            scope.set_tag("task_id", task_id)
-            scope.set_tag("run_id", run_id)
-            scope.set_context(
-                "airflow",
-                {
-                    "dag_id": dag_id,
-                    "task_id": task_id,
-                    "run_id": run_id,
-                    "execution_date": execution_date,
-                    "start_date": start_date,
-                    "end_date": end_date,
-                },
-            )
 
         self.log.info(
             f"Starting Strava extraction: {start_date or 'last 30 days'} to {end_date or 'today'}"
@@ -90,7 +53,6 @@ class StravaExtractOperator(BaseOperator):
             client_secret = Variable.get("STRAVA_CLIENT_SECRET")
             refresh_token = Variable.get("STRAVA_REFRESH_TOKEN")
         except KeyError as e:
-            sentry_sdk.capture_exception(e)
             raise ValueError(
                 f"Missing required Airflow Variable: {e}. "
                 "Please set STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, "
@@ -102,59 +64,143 @@ class StravaExtractOperator(BaseOperator):
         os.environ["CREDENTIALS__CLIENT_SECRET"] = client_secret
         os.environ["CREDENTIALS__REFRESH_TOKEN"] = refresh_token
 
-        # Import and run pipeline with Sentry transaction
-        trace_headers = {}
-        if os.getenv("SENTRY_TRACE"):
-            trace_headers["sentry-trace"] = os.getenv("SENTRY_TRACE")
-        if os.getenv("SENTRY_BAGGAGE"):
-            trace_headers["baggage"] = os.getenv("SENTRY_BAGGAGE")
-
-        if trace_headers:
-            transaction = sentry_sdk.continue_trace(
-                trace_headers,
-                op="airflow.task",
-                name=f"airflow.{dag_id}.{task_id}",
-            )
-        else:
-            transaction = sentry_sdk.start_transaction(
-                name=f"airflow.{dag_id}.{task_id}",
-                op="airflow.task",
-                description=f"Strava extraction: {start_date or 'default'} to {end_date or 'now'}",
+        try:
+            from strava_extract import run_pipeline
+            from strava_extract.config.settings import get_settings
+            from strava_extract.utils.telemetry import (
+                TelemetryConfig,
+                attach_trace_context,
+                detach_trace_context,
+                setup_telemetry,
             )
 
-        with transaction:
-            try:
-                from strava_extract import run_pipeline
+            settings = get_settings()
+            os.environ["DLT_PIPELINE_NAME"] = settings.pipeline.name
+            os.environ["DLT_DATASET_NAME"] = settings.pipeline.dataset_name
+            os.environ["DLT_DESTINATION"] = settings.pipeline.destination
 
-                self.log.info("Running Strava extract pipeline...")
-                load_info = run_pipeline(
-                    start_date=start_date,
-                    end_date=end_date,
+            telemetry_handlers = setup_telemetry(
+                TelemetryConfig(
+                    enabled=settings.telemetry.enabled,
+                    endpoint=settings.telemetry.endpoint,
+                    service_name=settings.telemetry.service_name,
+                    service_namespace=settings.telemetry.service_namespace,
+                    environment=settings.environment,
+                    enable_traces=settings.telemetry.enable_traces,
+                    enable_logs=settings.telemetry.enable_logs,
                 )
+            )
+            root_logger = logging.getLogger()
+            for handler in telemetry_handlers:
+                if not any(isinstance(existing, type(handler)) for existing in root_logger.handlers):
+                    root_logger.addHandler(handler)
 
-                # Log statistics
-                self.log.info(f"Pipeline completed successfully: {load_info}")
+            self.log.info("Running Strava extract pipeline...")
+            task_instance = context.get("ti")
+            carrier = {}
+            if task_instance and isinstance(getattr(task_instance, "context_carrier", None), dict):
+                carrier = task_instance.context_carrier
+            traceparent = carrier.get("traceparent") or os.getenv("TRACEPARENT")
+            token = None
+            if traceparent and not trace.get_current_span().get_span_context().is_valid:
+                token = attach_trace_context(traceparent)
+            tracer = trace.get_tracer(__name__)
+            try:
+                with tracer.start_as_current_span("strava.extract.task") as span:
+                    dag_run = context.get("dag_run")
+                    logical_date = context.get("logical_date")
+                    span.set_attribute("airflow.dag_id", context["dag"].dag_id)
+                    span.set_attribute("airflow.task_id", context["task"].task_id)
+                    span.set_attribute("airflow.run_id", dag_run.run_id if dag_run else "")
+                    span.set_attribute(
+                        "airflow.try_number",
+                        task_instance.try_number if task_instance else 0,
+                    )
+                    span.set_attribute(
+                        "airflow.map_index",
+                        task_instance.map_index if task_instance else -1,
+                    )
+                    span.set_attribute(
+                        "airflow.logical_date",
+                        logical_date.isoformat() if logical_date else "",
+                    )
+                    span.set_attribute("dlt.pipeline_name", settings.pipeline.name)
+                    span.set_attribute("dlt.dataset_name", settings.pipeline.dataset_name)
+                    span.set_attribute("dlt.destination", settings.pipeline.destination)
 
-                # Set transaction status to OK
-                transaction.set_status("ok")
+                    downstream: dict[str, str] = {}
+                    inject(downstream)
+                    injected_traceparent = downstream.get("traceparent") or traceparent
+                    if injected_traceparent:
+                        os.environ["STRAVA_TRACEPARENT"] = injected_traceparent
+                        os.environ["TRACEPARENT"] = injected_traceparent
 
-                # Return statistics for XCom
-                return {
-                    "start_date": start_date,
-                    "end_date": end_date,
-                    "load_info": str(load_info),
-                }
-
-            except Exception as e:
-                self.log.error(f"Pipeline failed: {e}")
-                sentry_sdk.capture_exception(e)
-                transaction.set_status("internal_error")
-                raise
+                    load_info = run_pipeline(
+                        start_date=start_date,
+                        end_date=end_date,
+                        configure_logging=False,
+                    )
             finally:
-                # Clean up environment variables
-                for key in [
-                    "CREDENTIALS__CLIENT_ID",
-                    "CREDENTIALS__CLIENT_SECRET",
-                    "CREDENTIALS__REFRESH_TOKEN",
-                ]:
-                    os.environ.pop(key, None)
+                detach_trace_context(token)
+
+            load_id = getattr(load_info, "load_id", None)
+            if not load_id:
+                load_ids = getattr(load_info, "load_ids", None)
+                if isinstance(load_ids, (list, tuple)) and load_ids:
+                    load_id = load_ids[0]
+            if load_id:
+                os.environ["DLT_LOAD_ID"] = str(load_id)
+                structlog.contextvars.bind_contextvars(dlt_load_id=str(load_id))
+
+            # Log statistics
+            self.log.info(f"Pipeline completed successfully: {load_info}")
+
+            # Extract schema lineage from dlt pipeline
+            lineage = {"tables": {}}
+            pipeline = load_info.pipeline
+            if pipeline and pipeline.default_schema:
+                schema = pipeline.default_schema
+                for table_name, table in schema.tables.items():
+                    if table_name.startswith("_dlt"):
+                        continue
+                    lineage["tables"][table_name] = {
+                        "columns": [
+                            {
+                                "name": col_name,
+                                "data_type": col.get("data_type"),
+                                "nullable": col.get("nullable", True),
+                            }
+                            for col_name, col in table.get("columns", {}).items()
+                        ],
+                        "resource": table.get("resource"),
+                        "write_disposition": table.get("write_disposition"),
+                        "parent": table.get("parent"),
+                    }
+
+            # Return statistics for XCom
+            return {
+                "start_date": start_date,
+                "end_date": end_date,
+                "load_info": str(load_info),
+                "lineage": lineage,
+                "destination": load_info.destination_name,
+                "dataset": load_info.dataset_name,
+            }
+
+        except Exception as e:
+            self.log.error(f"Pipeline failed: {e}")
+            raise
+        finally:
+            # Clean up environment variables
+            for key in [
+                "CREDENTIALS__CLIENT_ID",
+                "CREDENTIALS__CLIENT_SECRET",
+                "CREDENTIALS__REFRESH_TOKEN",
+                "STRAVA_TRACEPARENT",
+                "TRACEPARENT",
+                "DLT_PIPELINE_NAME",
+                "DLT_DATASET_NAME",
+                "DLT_DESTINATION",
+                "DLT_LOAD_ID",
+            ]:
+                os.environ.pop(key, None)
