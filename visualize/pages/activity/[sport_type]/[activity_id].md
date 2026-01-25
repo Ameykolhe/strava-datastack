@@ -61,6 +61,59 @@ where activity_id = CAST('${params.activity_id}' AS BIGINT)
 order by zone_id
 ```
 
+```sql pace_zones
+select
+    activity_id,
+    zone_id,
+    zone_name,
+    zone_min_pace,
+    zone_max_pace,
+    zone_min_pace_sec,
+    zone_max_pace_sec,
+    time_seconds,
+    time_minutes,
+    pct_in_zone
+from strava.activity_pace_zones
+where activity_id = CAST('${params.activity_id}' AS BIGINT)
+order by zone_id
+```
+
+```sql hr_zone_distribution
+select
+    zone_id,
+    zone_name,
+    case
+        when pct_in_zone <= 1 then pct_in_zone
+        else pct_in_zone / 100
+    end as pct_in_zone
+from strava.activity_hr_zones
+where activity_id = CAST('${params.activity_id}' AS BIGINT)
+```
+
+```sql power_zone_distribution
+select
+    zone_id,
+    zone_name,
+    case
+        when pct_in_zone <= 1 then pct_in_zone
+        else pct_in_zone / 100
+    end as pct_in_zone
+from strava.activity_power_zones
+where activity_id = CAST('${params.activity_id}' AS BIGINT)
+```
+
+```sql pace_zone_distribution
+select
+    zone_id,
+    zone_name,
+    case
+        when pct_in_zone <= 1 then pct_in_zone
+        else pct_in_zone / 100
+    end as pct_in_zone
+from strava.activity_pace_zones
+where activity_id = CAST('${params.activity_id}' AS BIGINT)
+```
+
 {#if activity_detail.length > 0}
 
 # {activity_detail[0].activity_name}
@@ -127,25 +180,25 @@ order by zone_id
 
 ## Details
 
-| Metric | Value |
-|--------|-------|
-| Sport Type | {activity_detail[0].sport_type} |
-| Workout Type | {activity_detail[0].workout_type ?? 'N/A'} |
-| Elapsed Time | {activity_detail[0].elapsed_time_seconds} seconds |
-| Moving Time | {activity_detail[0].moving_time_seconds} seconds |
-| Distance | {activity_detail[0].distance_miles?.toFixed(2) ?? 'N/A'} mi |
+| Metric         | Value                                                            |
+|----------------|------------------------------------------------------------------|
+| Sport Type     | {activity_detail[0].sport_type}                                  |
+| Workout Type   | {activity_detail[0].workout_type ?? 'N/A'}                       |
+| Elapsed Time   | {activity_detail[0].elapsed_time_seconds} seconds                |
+| Moving Time    | {activity_detail[0].moving_time_seconds} seconds                 |
+| Distance       | {activity_detail[0].distance_miles?.toFixed(2) ?? 'N/A'} mi      |
 | Elevation Gain | {activity_detail[0].elevation_gain_feet?.toFixed(0) ?? 'N/A'} ft |
-| Avg Speed | {activity_detail[0].average_speed_mph?.toFixed(1) ?? 'N/A'} mph |
-| Max Speed | {activity_detail[0].max_speed_mph?.toFixed(1) ?? 'N/A'} mph |
+| Avg Speed      | {activity_detail[0].average_speed_mph?.toFixed(1) ?? 'N/A'} mph  |
+| Max Speed      | {activity_detail[0].max_speed_mph?.toFixed(1) ?? 'N/A'} mph      |
 
 {#if activity_detail[0].average_heartrate_bpm != null}
 
 ### Heart Rate
 
-| Metric | Value |
-|--------|-------|
+| Metric | Value                                                               |
+|--------|---------------------------------------------------------------------|
 | Avg HR | {activity_detail[0].average_heartrate_bpm?.toFixed(0) ?? 'N/A'} bpm |
-| Max HR | {activity_detail[0].max_heartrate_bpm?.toFixed(0) ?? 'N/A'} bpm |
+| Max HR | {activity_detail[0].max_heartrate_bpm?.toFixed(0) ?? 'N/A'} bpm     |
 
 {/if}
 
@@ -153,40 +206,154 @@ order by zone_id
 
 ### Power
 
-| Metric | Value |
-|--------|-------|
+| Metric    | Value                                                     |
+|-----------|-----------------------------------------------------------|
 | Avg Power | {activity_detail[0].average_watts?.toFixed(0) ?? 'N/A'} W |
-| Energy | {activity_detail[0].kilojoules?.toFixed(0) ?? 'N/A'} kJ |
-| Calories | {activity_detail[0].calories_burned?.toFixed(0) ?? 'N/A'} kcal |
+| Energy    | {activity_detail[0].kilojoules?.toFixed(0) ?? 'N/A'} kJ   |
+{/if}
+
+{#if hr_zones.length > 0 || power_zones.length > 0 || pace_zones.length > 0}
+## Zone Distribution
+
+{#if hr_zones.length > 0}
+### Heart Rate Zones
+
+<div class="zone-split">
+    <BarChart
+        data={hr_zone_distribution}
+        x=zone_name
+        y=pct_in_zone
+        sort={false}
+        yMin={0}
+        yMax={1}
+        yFmt="0%"
+        chartAreaHeight={220}
+        yAxisLabels={false}
+        xGridlines={false}
+        yGridlines={false}
+        echartsOptions={{
+            grid: {
+                bottom: 70
+            },
+            xAxis: {
+                axisLabel: {
+                    rotate: 90,
+                    margin: 12
+                }
+            }
+        }}
+    />
+    <div>
+        <DataTable data={hr_zones} rows={5}>
+            <Column id=zone_name title="Zone"/>
+            <Column id=zone_min_bpm title="Min (bpm)" fmt="#,##0"/>
+            <Column id=zone_max_bpm title="Max (bpm)" fmt="#,##0"/>
+        </DataTable>
+    </div>
+</div>
+{/if}
+
+{#if power_zones.length > 0}
+### Power Zones
+
+<div class="zone-split">
+    <BarChart
+        data={power_zone_distribution}
+        x=zone_name
+        y=pct_in_zone
+        sort={false}
+        yMin={0}
+        yMax={1}
+        yFmt="0%"
+        chartAreaHeight={220}
+        yAxisLabels={false}
+        xGridlines={false}
+        yGridlines={false}
+        echartsOptions={{
+            grid: {
+                bottom: 70
+            },
+            xAxis: {
+                axisLabel: {
+                    rotate: 90,
+                    margin: 12
+                }
+            }
+        }}
+    />
+    <div>
+        <DataTable data={power_zones} rows={5}>
+            <Column id=zone_name title="Zone"/>
+            <Column id=zone_min_watts title="Min (W)" fmt="#,##0"/>
+            <Column id=zone_max_watts title="Max (W)" fmt="#,##0"/>
+        </DataTable>
+    </div>
+</div>
+{/if}
+
+{#if pace_zones.length > 0}
+### Pace Zones
+
+<div class="zone-split">
+    <BarChart
+        data={pace_zone_distribution}
+        x=zone_name
+        y=pct_in_zone
+        sort={false}
+        yMin={0}
+        yMax={1}
+        yFmt="0%"
+        chartAreaHeight={220}
+        yAxisLabels={false}
+        xGridlines={false}
+        yGridlines={false}
+        echartsOptions={{
+            grid: {
+                bottom: 70
+            },
+            xAxis: {
+                axisLabel: {
+                    rotate: 90,
+                    margin: 12
+                }
+            }
+        }}
+    />
+    <div>
+        <DataTable data={pace_zones} rows={5}>
+            <Column id=zone_name title="Zone"/>
+            <Column id=zone_min_pace title="Min (/km)"/>
+            <Column id=zone_max_pace title="Max (/km)"/>
+        </DataTable>
+    </div>
+</div>
+{/if}
+
+<style>
+  .zone-split {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+    gap: 16px;
+    align-items: start;
+  }
+
+  @media (max-width: 900px) {
+    .zone-split {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
 
 {/if}
 
-## Heart Rate Zones
-
-<ZoneDistribution
-    data={hr_zones}
-    minField="zone_min_bpm"
-    maxField="zone_max_bpm"
-    unit="bpm"
-/>
-
-## Power Zones
-
-<ZoneDistribution
-    data={power_zones}
-    minField="zone_min_watts"
-    maxField="zone_max_watts"
-    unit="W"
-/>
-
 ### Strava Stats
 
-| Metric | Value |
-|--------|-------|
-| Kudos | {activity_detail[0].kudos_count} |
-| Comments | {activity_detail[0].comment_count} |
-| Achievements | {activity_detail[0].achievement_count} |
-| PRs | {activity_detail[0].pr_count} |
+| Metric       | Value                                      |
+|--------------|--------------------------------------------|
+| Kudos        | {activity_detail[0].kudos_count}           |
+| Comments     | {activity_detail[0].comment_count}         |
+| Achievements | {activity_detail[0].achievement_count}     |
+| PRs          | {activity_detail[0].pr_count}              |
 | Suffer Score | {activity_detail[0].suffer_score ?? 'N/A'} |
 
 {:else}

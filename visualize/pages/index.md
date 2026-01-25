@@ -105,14 +105,6 @@ where activity_year = ${inputs.trend_year_filter.value}
 
 ### Activities by Sport
 
-<EChartsPie
-    data={sport_mix}
-    x=sport_type
-    y=activity_count
-    labels=true
-    title="Activity Count by Sport"
-/>
-
 <BarChart
     data={sport_mix}
     x=sport_type

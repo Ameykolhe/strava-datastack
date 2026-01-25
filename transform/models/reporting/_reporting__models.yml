@@ -117,6 +117,34 @@ models:
       - name: total_distance_km
         description: Total distance in kilometers
 
+  - name: rpt_sport_trends_12mo__sport_type_month
+    description: |
+      Reporting model for sport trends over the full timeline.
+      Grain: One row per sport_type per month.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - sport_type
+            - activity_year
+            - month_number
+    columns:
+      - name: sport_type
+        description: Sport type classification
+        tests:
+          - not_null
+      - name: activity_year
+        description: Activity year
+        tests:
+          - not_null
+      - name: month_number
+        description: Month number (1-12)
+        tests:
+          - not_null
+      - name: activity_count
+        description: Count of activities in the month
+      - name: total_distance_km
+        description: Total distance in kilometers
+
   - name: rpt_activities_by_sport__sport_type
     description: |
       Reporting model for activity summary by sport type.
@@ -133,6 +161,25 @@ models:
         description: Count of activities for the sport
       - name: total_distance_km
         description: Total distance in kilometers
+
+  - name: rpt_sport_kpis__sport_type
+    description: |
+      Reporting model for sport-level KPIs.
+      Grain: One row per sport_type.
+    columns:
+      - name: sport_type
+        description: Sport type classification
+        tests:
+          - unique
+          - not_null
+      - name: activity_count
+        description: Count of activities for the sport
+      - name: total_distance_km
+        description: Total distance in kilometers
+      - name: total_moving_time_hours
+        description: Total moving time in hours
+      - name: avg_heartrate_bpm
+        description: Average heart rate across activities
 
   - name: rpt_sport_mix__sport_type
     description: |
@@ -166,6 +213,37 @@ models:
         description: Total elevation gain in feet
       - name: avg_speed_mph
         description: Average speed across all activities
+
+  - name: rpt_home_trends_12mo__month
+    description: |
+      Reporting model for home trends over the full timeline.
+      Grain: One row per month.
+    columns:
+      - name: month_start
+        description: Month start date
+        tests:
+          - unique
+          - not_null
+      - name: activity_count
+        description: Count of activities in the month
+      - name: total_distance_miles
+        description: Total distance in miles
+      - name: total_moving_time_hours
+        description: Total moving time in hours
+
+  - name: rpt_home_streaks__all
+    description: |
+      Reporting model for current and longest streaks.
+      Grain: Single row (all activities).
+    columns:
+      - name: max_activity_date
+        description: Most recent activity date
+      - name: current_streak
+        description: Current streak length in days
+      - name: longest_streak
+        description: Longest streak length in days
+      - name: active_days_last_30
+        description: Active days in the last 30 days
 
   - name: rpt_home_daily_trends__day
     description: |

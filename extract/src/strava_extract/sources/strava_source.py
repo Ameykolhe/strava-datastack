@@ -7,11 +7,13 @@ import dlt
 import yaml
 from dlt.common.pendulum import pendulum
 from dlt.sources.rest_api import RESTAPIConfig, rest_api_resources
+from packaging.version import Version
 
 from ..client.paginator import StravaPagePaginator
 from ..client.rate_limiter import RateLimiter, RateLimitExceededError
 from ..client.response_handler import create_rate_limit_response_action
 from ..config.settings import get_settings
+from ..strava_schema_contract import get_table_contract, normalize_record
 from ..utils.exceptions import ConfigurationError
 from ..utils.logging import get_logger
 
@@ -19,6 +21,16 @@ logger = get_logger(__name__)
 
 # Shared rate limiter instance (singleton per process)
 _rate_limiter: Optional[RateLimiter] = None
+_MIN_DLT_VERSION = Version("1.3.0")
+_SCHEMA_CONTRACT = {"tables": "freeze", "columns": "freeze", "data_type": "freeze"}
+
+
+def _ensure_supported_dlt_version() -> None:
+    if Version(dlt.__version__) < _MIN_DLT_VERSION:
+        raise ConfigurationError(
+            f"dlt>={_MIN_DLT_VERSION} required for schema contract support, "
+            f"found {dlt.__version__}"
+        )
 
 
 def get_rate_limiter() -> RateLimiter:
@@ -79,6 +91,24 @@ def check_rate_limit_status() -> None:
     rate_limiter.check_resume_status()
 
 
+def _apply_schema_contracts(resources):
+    def _make_normalizer(contract):
+        # Keep a single-arg signature so dlt doesn't pass meta as the second arg.
+        def _normalize(item):
+            return normalize_record(item, contract)
+
+        return _normalize
+
+    for resource in resources:
+        contract = get_table_contract(resource.name)
+        if not contract:
+            raise ConfigurationError(
+                f"Schema contract missing for resource '{resource.name}'"
+            )
+        resource.add_map(_make_normalizer(contract))
+    return resources
+
+
 def build_rest_api_config(
     start_date: Optional[str], end_date: Optional[str]
 ) -> RESTAPIConfig:
@@ -92,6 +122,7 @@ def build_rest_api_config(
     Returns:
         REST API configuration for dlt.
     """
+    _ensure_supported_dlt_version()
     settings = get_settings()
     rate_limiter = get_rate_limiter()
 
@@ -164,8 +195,12 @@ def build_rest_api_config(
         if "include_from_parent" in res_config:
             resource["include_from_parent"] = res_config["include_from_parent"]
 
-        if "columns" in res_config:
-            resource["columns"] = res_config["columns"]
+        contract = get_table_contract(resource_name)
+        if not contract:
+            raise ConfigurationError(
+                f"Schema contract missing for resource '{resource_name}'"
+            )
+        resource["columns"] = contract.to_dlt_columns()
 
         # Add additional response actions from config (like 404 handling)
         if "response_actions" in res_config["endpoint"]:
@@ -206,6 +241,7 @@ def build_rest_api_config(
         "resource_defaults": {
             "primary_key": "id",
             "write_disposition": "merge",
+            "schema_contract": _SCHEMA_CONTRACT,
             "endpoint": {
                 "params": {
                     "per_page": settings.pagination.default_page_size,
@@ -252,4 +288,6 @@ def strava_source(start_date: Optional[str] = None, end_date: Optional[str] = No
 
     config = build_rest_api_config(start_date, end_date)
 
-    yield from rest_api_resources(config)
+    resources = rest_api_resources(config)
+    resources = _apply_schema_contracts(resources)
+    yield from resources

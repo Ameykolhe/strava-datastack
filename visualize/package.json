@@ -4,11 +4,11 @@
   "scripts": {
     "build": "evidence build",
     "build:strict": "evidence build:strict",
-    "dev": "evidence dev --open /",
+    "dev": "evidence dev --open / --port 4000",
     "test": "evidence build",
     "sources": "evidence sources",
     "sources:strict": "evidence sources --strict",
-    "preview": "evidence preview"
+    "preview": "evidence preview --port 4000"
   },
   "engines": {
     "npm": ">=7.0.0",
