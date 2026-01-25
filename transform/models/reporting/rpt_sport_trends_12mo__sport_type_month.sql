@@ -13,7 +13,7 @@ with date_bounds as (
     select
         sport_type,
         min(activity_date) as min_activity_date,
-        max(activity_date) as max_activity_date
+        greatest(max(activity_date), current_date) as max_activity_date
     from {{ ref('fct_strava__activities') }}
     group by sport_type
 ),
@@ -23,7 +23,9 @@ activities as (
         sport_type,
         started_at_local,
         distance_km,
+        distance_miles,
         elevation_gain_meters,
+        elevation_gain_feet,
         moving_time_seconds,
         average_heartrate_bpm
     from {{ ref('fct_strava__activities') }}
@@ -56,7 +58,9 @@ monthly as (
         extract(month from started_at_local)::int as month_number,
         count(*) as activity_count,
         sum(distance_km) as total_distance_km,
+        sum(distance_miles) as total_distance_miles,
         sum(elevation_gain_meters) as total_elevation_meters,
+        sum(elevation_gain_feet) as total_elevation_feet,
         sum(moving_time_seconds) / 3600.0 as total_moving_time_hours,
         avg(average_heartrate_bpm) as avg_heartrate_bpm,
         sum(moving_time_seconds) as total_moving_time_seconds
@@ -73,7 +77,9 @@ final as (
         strftime(s.month_start, '%Y-%m') as month_label,
         coalesce(m.activity_count, 0) as activity_count,
         round(coalesce(m.total_distance_km, 0), 1) as total_distance_km,
+        round(coalesce(m.total_distance_miles, 0), 1) as total_distance_miles,
         round(coalesce(m.total_elevation_meters, 0), 0) as total_elevation_meters,
+        round(coalesce(m.total_elevation_feet, 0), 0) as total_elevation_feet,
         round(coalesce(m.total_moving_time_hours, 0), 1) as total_moving_time_hours,
         round(m.avg_heartrate_bpm, 0) as avg_heartrate_bpm,
         case
@@ -95,7 +101,9 @@ select
     month_label,
     activity_count,
     total_distance_km,
+    total_distance_miles,
     total_elevation_meters,
+    total_elevation_feet,
     total_moving_time_hours,
     avg_heartrate_bpm,
     avg_speed_kmh

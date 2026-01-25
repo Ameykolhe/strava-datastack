@@ -144,6 +144,10 @@ models:
         description: Count of activities in the month
       - name: total_distance_km
         description: Total distance in kilometers
+      - name: total_distance_miles
+        description: Total distance in miles
+      - name: total_elevation_feet
+        description: Total elevation gain in feet
 
   - name: rpt_activities_by_sport__sport_type
     description: |
@@ -205,6 +209,8 @@ models:
         description: Total number of activities
         tests:
           - not_null
+      - name: total_distance_km
+        description: Total distance in kilometers
       - name: total_distance_miles
         description: Total distance in miles
       - name: total_moving_time_hours
@@ -226,6 +232,8 @@ models:
           - not_null
       - name: activity_count
         description: Count of activities in the month
+      - name: total_distance_km
+        description: Total distance in kilometers
       - name: total_distance_miles
         description: Total distance in miles
       - name: total_moving_time_hours
@@ -285,6 +293,20 @@ models:
           - not_null
       - name: activity_count
         description: Count of activities in the year
+      - name: total_distance_km
+        description: Total distance in kilometers for the year
+      - name: total_distance_miles
+        description: Total distance in miles for the year
+      - name: total_moving_time_hours
+        description: Total moving time in hours for the year
+      - name: total_elevation_gain_feet
+        description: Total elevation gain in feet for the year
+      - name: longest_distance_miles
+        description: Longest activity distance in miles for the year
+      - name: hardest_elevation_gain_feet
+        description: Max elevation gain in feet for the year
+      - name: avg_speed_mph
+        description: Average speed in mph for the year
 
   - name: rpt_year_monthly__month
     description: |
@@ -304,8 +326,135 @@ models:
         description: Month number (1-12)
         tests:
           - not_null
+      - name: month_label
+        description: Month label in YYYY-MM format
       - name: activity_count
         description: Count of activities in the month
+      - name: total_distance_km
+        description: Total distance in kilometers for the month
+      - name: total_distance_miles
+        description: Total distance in miles for the month
+      - name: total_moving_time_hours
+        description: Total moving time in hours for the month
+      - name: total_elevation_gain_feet
+        description: Total elevation gain in feet for the month
+
+  - name: rpt_year_streaks__year
+    description: |
+      Reporting model for activity streaks by year.
+      Grain: One row per activity_year.
+    columns:
+      - name: activity_year
+        description: Activity year
+        tests:
+          - unique
+          - not_null
+      - name: current_streak
+        description: Current streak length in days for the year
+      - name: longest_streak
+        description: Longest streak length in days for the year
+      - name: active_days_last_30
+        description: Active days in the last 30 days of the year
+      - name: active_days_year
+        description: Active days in the year
+
+  - name: rpt_year_sport_summary__sport_type_year
+    description: |
+      Reporting model for activity summary by sport type and year.
+      Grain: One row per sport_type per activity_year.
+    columns:
+      - name: sport_type
+        description: Sport type classification
+      - name: sport_slug
+        description: Lowercase sport slug for routing
+      - name: activity_year
+        description: Activity year
+      - name: activity_count
+        description: Count of activities for the sport and year
+      - name: total_distance_km
+        description: Total distance in kilometers for the sport and year
+      - name: total_distance_miles
+        description: Total distance in miles for the sport and year
+      - name: total_moving_time_hours
+        description: Total moving time in hours for the sport and year
+
+  - name: rpt_year_sport_kpis__sport_type_year
+    description: |
+      Reporting model for sport-level KPIs by year.
+      Grain: One row per sport_type per activity_year.
+    columns:
+      - name: sport_type
+        description: Sport type classification
+      - name: sport_slug
+        description: Lowercase sport slug for routing
+      - name: activity_year
+        description: Activity year
+      - name: activity_count
+        description: Count of activities for the sport and year
+      - name: total_distance_km
+        description: Total distance in kilometers for the sport and year
+      - name: total_distance_miles
+        description: Total distance in miles for the sport and year
+      - name: total_moving_time_hours
+        description: Total moving time in hours for the sport and year
+      - name: total_elevation_gain_feet
+        description: Total elevation gain in feet for the sport and year
+      - name: avg_heartrate_bpm
+        description: Average heart rate for the sport and year
+      - name: avg_speed_kmh
+        description: Average speed in km/h for the sport and year
+      - name: avg_pace_min_per_km
+        description: Average pace in minutes per kilometer for the sport and year
+
+  - name: rpt_year_sport_monthly__sport_type_month
+    description: |
+      Reporting model for sport-level monthly trends by year.
+      Grain: One row per sport_type per activity_year per month.
+    columns:
+      - name: sport_type
+        description: Sport type classification
+      - name: sport_slug
+        description: Lowercase sport slug for routing
+      - name: activity_year
+        description: Activity year
+      - name: month_number
+        description: Month number (1-12)
+      - name: month_label
+        description: Month label in YYYY-MM format
+      - name: activity_count
+        description: Count of activities for the sport and month
+      - name: total_distance_km
+        description: Total distance in kilometers for the sport and month
+      - name: total_distance_miles
+        description: Total distance in miles for the sport and month
+      - name: total_moving_time_hours
+        description: Total moving time in hours for the sport and month
+      - name: total_elevation_feet
+        description: Total elevation gain in feet for the sport and month
+      - name: avg_heartrate_bpm
+        description: Average heart rate for the sport and month
+      - name: avg_speed_kmh
+        description: Average speed in km/h for the sport and month
+
+  - name: rpt_year_sport_streaks__sport_type_year
+    description: |
+      Reporting model for activity streaks by sport type and year.
+      Grain: One row per sport_type per activity_year.
+    columns:
+      - name: sport_type
+        description: Sport type classification
+      - name: sport_slug
+        description: Lowercase sport slug for routing
+      - name: activity_year
+        description: Activity year
+      - name: current_streak
+        description: Current streak length in days for the sport and year
+      - name: longest_streak
+        description: Longest streak length in days for the sport and year
+      - name: active_days_last_30
+        description: Active days in the last 30 days for the sport and year
+      - name: active_days_year
+        description: Active days in the year for the sport
 
   - name: rpt_year_routes__year
     description: |

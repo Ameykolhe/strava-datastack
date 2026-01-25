@@ -118,6 +118,40 @@ async function addYearLinksToManifest(pagesManifest, query) {
 	});
 }
 
+async function addSportLinksToManifest(pagesManifest, query) {
+	const activityNode = pagesManifest?.children?.activity;
+	if (!activityNode) return;
+
+	const sports = await query(
+		`
+		select sport_type, sport_slug
+		from strava.activities_by_sport
+		order by activity_count desc, sport_type
+		`,
+		{ query_name: 'sidebar_sports' }
+	);
+
+	if (!Array.isArray(sports) || sports.length === 0) return;
+	if (!activityNode.children) activityNode.children = {};
+
+	sports.forEach((row, index) => {
+		const sportSlug = row?.sport_slug;
+		if (!sportSlug) return;
+		const sportLabel = row?.sport_type ?? sportSlug;
+		activityNode.children[sportSlug] = {
+			label: sportLabel,
+			href: `/activity/${sportSlug}`,
+			children: {},
+			frontMatter: {
+				title: sportLabel,
+				sidebar_position: index
+			},
+			isTemplated: false,
+			isPage: true
+		};
+	});
+}
+
 /** @satisfies {import("./$types").LayoutLoad} */
 export const load = async ({ fetch, route, params, url }) => {
 	const [{ customFormattingSettings }, pagesManifest, evidencemeta] = await Promise.all([
@@ -186,6 +220,7 @@ export const load = async ({ fetch, route, params, url }) => {
 
 	if (isUserPage) {
 		await addYearLinksToManifest(pagesManifest, query);
+		await addSportLinksToManifest(pagesManifest, query);
 	}
 
 	let tree = pagesManifest;

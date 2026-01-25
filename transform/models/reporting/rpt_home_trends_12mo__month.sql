@@ -30,6 +30,7 @@ months as (
 activities as (
     select
         activity_date,
+        distance_km,
         distance_miles,
         moving_time_seconds,
         elevation_gain_feet
@@ -40,6 +41,7 @@ monthly as (
     select
         date_trunc('month', activity_date)::date as month_start,
         count(*) as activity_count,
+        sum(distance_km) as total_distance_km,
         sum(distance_miles) as total_distance_miles,
         sum(moving_time_seconds) / 3600.0 as total_moving_time_hours,
         sum(elevation_gain_feet) as total_elevation_gain_feet
@@ -52,6 +54,7 @@ final as (
         m.month_start,
         strftime(m.month_start, '%Y-%m') as month_label,
         coalesce(monthly.activity_count, 0) as activity_count,
+        round(coalesce(monthly.total_distance_km, 0), 1) as total_distance_km,
         round(coalesce(monthly.total_distance_miles, 0), 1) as total_distance_miles,
         round(coalesce(monthly.total_moving_time_hours, 0), 1) as total_moving_time_hours,
         round(coalesce(monthly.total_elevation_gain_feet, 0), 0) as total_elevation_gain_feet
@@ -64,6 +67,7 @@ select
     month_start,
     month_label,
     activity_count,
+    total_distance_km,
     total_distance_miles,
     total_moving_time_hours,
     total_elevation_gain_feet

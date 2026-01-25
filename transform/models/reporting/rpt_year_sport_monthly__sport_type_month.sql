@@ -5,24 +5,27 @@
 }}
 
 /*
-    Reporting model for monthly year rollups.
-    Grain: One row per activity_year per month.
-    Primary key: (activity_year, month_number)
+    Reporting model for sport-level monthly trends by year.
+    Grain: One row per sport_type per activity_year per month.
+    Primary key: (sport_type, activity_year, month_number)
 */
 
 with activities as (
     select
-        started_at_local,
+        sport_type,
         activity_year,
+        started_at_local,
         distance_km,
         distance_miles,
         moving_time_seconds,
-        elevation_gain_feet
+        elevation_gain_feet,
+        average_heartrate_bpm
     from {{ ref('fct_strava__activities') }}
 ),
 
 monthly as (
     select
+        sport_type,
         activity_year,
         date_trunc('month', started_at_local)::date as month_start,
         extract(month from started_at_local)::int as month_number,
@@ -30,31 +33,34 @@ monthly as (
         sum(distance_km) as total_distance_km,
         sum(distance_miles) as total_distance_miles,
         sum(moving_time_seconds) / 3600.0 as total_moving_time_hours,
-        sum(elevation_gain_feet) as total_elevation_gain_feet
+        sum(elevation_gain_feet) as total_elevation_feet,
+        avg(average_heartrate_bpm) as avg_heartrate_bpm,
+        sum(moving_time_seconds) as total_moving_time_seconds
     from activities
-    group by activity_year, month_start, month_number
+    group by sport_type, activity_year, month_start, month_number
 ),
 
-years as (
+sport_years as (
     select distinct
+        sport_type,
         activity_year
     from activities
 ),
 
 calendar_months as (
     select
-        y.activity_year,
+        sy.sport_type,
+        sy.activity_year,
         gs.month_start::date as month_start,
         extract(month from gs.month_start)::int as month_number,
-        strftime(gs.month_start, '%Y-%m') as month_label,
-        strftime(gs.month_start, '%b') as month_name
-    from years y
+        strftime(gs.month_start, '%Y-%m') as month_label
+    from sport_years sy
     cross join generate_series(
-        make_date(y.activity_year, 1, 1),
+        make_date(sy.activity_year, 1, 1),
         case
-            when y.activity_year = extract(year from current_date)
+            when sy.activity_year = extract(year from current_date)
                 then date_trunc('month', current_date)
-            else make_date(y.activity_year, 12, 1)
+            else make_date(sy.activity_year, 12, 1)
         end,
         interval '1 month'
     ) as gs(month_start)
@@ -62,32 +68,46 @@ calendar_months as (
 
 final as (
     select
+        cm.sport_type,
+        lower(cm.sport_type) as sport_slug,
         cm.activity_year,
         cm.month_start,
         cm.month_number,
         cm.month_label,
-        cm.month_name,
         coalesce(m.activity_count, 0) as activity_count,
         coalesce(round(m.total_distance_km, 1), 0) as total_distance_km,
         coalesce(round(m.total_distance_miles, 1), 0) as total_distance_miles,
         coalesce(round(m.total_moving_time_hours, 1), 0) as total_moving_time_hours,
-        coalesce(round(m.total_elevation_gain_feet, 0), 0) as total_elevation_gain_feet
+        coalesce(round(m.total_elevation_feet, 0), 0) as total_elevation_feet,
+        case
+            when m.avg_heartrate_bpm is not null then round(m.avg_heartrate_bpm, 0)
+            else null
+        end as avg_heartrate_bpm,
+        case
+            when m.total_moving_time_seconds > 0
+                then round((m.total_distance_km / (m.total_moving_time_seconds / 3600.0)), 1)
+            else null
+        end as avg_speed_kmh
     from calendar_months cm
     left join monthly m
-        on cm.activity_year = m.activity_year
+        on cm.sport_type = m.sport_type
+        and cm.activity_year = m.activity_year
         and cm.month_start = m.month_start
 )
 
 select
+    sport_type,
+    sport_slug,
     activity_year,
     month_start,
     month_number,
     month_label,
-    month_name,
     activity_count,
     total_distance_km,
     total_distance_miles,
     total_moving_time_hours,
-    total_elevation_gain_feet
+    total_elevation_feet,
+    avg_heartrate_bpm,
+    avg_speed_kmh
 from final
-order by activity_year, month_start
+order by sport_type, activity_year, month_start
