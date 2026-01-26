@@ -47,4 +47,5 @@ models:
     reporting:
       +materialized: table
       +tags: ["reporting"]
+      +database: reporting
       +schema: reporting

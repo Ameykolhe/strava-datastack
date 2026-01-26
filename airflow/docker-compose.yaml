@@ -42,6 +42,7 @@ x-airflow-common:
     # Application settings
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     DUCKDB_PATH: ${DUCKDB_PATH:-/opt/airflow/data/strava_datastack.duckdb}
+    DUCKDB_REPORTING_PATH: ${DUCKDB_REPORTING_PATH:-/opt/airflow/data/strava_reporting.duckdb}
     STRAVA_ENVIRONMENT: ${STRAVA_ENVIRONMENT:-production}
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags

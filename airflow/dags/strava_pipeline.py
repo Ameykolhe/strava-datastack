@@ -28,6 +28,7 @@ default_args = {
 strava_api = Dataset("strava://api")
 raw_duckdb = Dataset("duckdb://strava_datastack/raw")
 analytics_duckdb = Dataset("duckdb://strava_datastack/analytics")
+reporting_duckdb = Dataset("duckdb://strava_reporting/reporting")
 
 # DAG definition
 with DAG(
@@ -93,7 +94,7 @@ with DAG(
             "dbt_cmd_flags": ["--threads", "1"],  # Single thread for DuckDB
             "pool": "dbt_duckdb_pool",  # Use dedicated pool with 1 slot for sequential execution
             "inlets": [raw_duckdb],
-            "outlets": [analytics_duckdb],
+            "outlets": [analytics_duckdb, reporting_duckdb],
         },
     )
 

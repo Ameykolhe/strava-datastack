@@ -7,9 +7,15 @@ strava_transform:
       schema: dbt_sandbox
       threads: 1
       path: "{{ env_var('DUCKDB_PATH') }}"
-    
+      attach:
+        - path: "{{ env_var('DUCKDB_REPORTING_PATH') }}"
+          alias: reporting
+
     prod:
       type: duckdb
       schema: analytics
       threads: 1
       path: "{{ env_var('DUCKDB_PATH') }}"
+      attach:
+        - path: "{{ env_var('DUCKDB_REPORTING_PATH') }}"
+          alias: reporting
