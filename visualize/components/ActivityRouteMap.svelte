@@ -1,5 +1,16 @@
+<!--
+  Activity Route Map
+  Displays a single activity route on an interactive map.
+
+  @prop {string} polyline - Encoded polyline string for the route
+  @prop {number} height - Map height in pixels (default: 400)
+  @prop {string} lineColor - Route line color (default: Strava orange #FC4C02)
+  @prop {number} lineWeight - Route line thickness (default: 3)
+-->
 <script>
   import { onMount, onDestroy } from "svelte";
+  import { decodePolyline } from "./lib/polyline.js";
+  import { isDarkMode, getTileUrl } from "./lib/mapUtils.js";
 
   // Props
   export let polyline = "";
@@ -9,57 +20,7 @@
 
   let mapEl;
   let map;
-  let routeLine;
   let L;
-
-  // Decode Google polyline to array of [lat, lng] pairs
-  function decodePolyline(encoded) {
-    if (!encoded) return [];
-
-    const poly = [];
-    let index = 0,
-      lat = 0,
-      lng = 0;
-
-    while (index < encoded.length) {
-      let shift = 0,
-        result = 0,
-        byte;
-
-      do {
-        byte = encoded.charCodeAt(index++) - 63;
-        result |= (byte & 0x1f) << shift;
-        shift += 5;
-      } while (byte >= 0x20);
-
-      lat += result & 1 ? ~(result >> 1) : result >> 1;
-
-      shift = 0;
-      result = 0;
-
-      do {
-        byte = encoded.charCodeAt(index++) - 63;
-        result |= (byte & 0x1f) << shift;
-        shift += 5;
-      } while (byte >= 0x20);
-
-      lng += result & 1 ? ~(result >> 1) : result >> 1;
-
-      poly.push([lat / 1e5, lng / 1e5]);
-    }
-
-    return poly;
-  }
-
-  function isDarkMode() {
-    if (typeof window === "undefined") return false;
-    // Check for Evidence dark mode class or system preference
-    return (
-      document.documentElement.classList.contains("dark") ||
-      document.body.classList.contains("dark") ||
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-    );
-  }
 
   async function initMap() {
     if (!mapEl || !polyline) return;
@@ -81,9 +42,7 @@
 
       // Add tile layer based on theme
       const darkMode = isDarkMode();
-      const tileUrl = darkMode
-        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+      const tileUrl = getTileUrl(darkMode);
 
       L.tileLayer(tileUrl, {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -92,7 +51,7 @@
       }).addTo(map);
 
       // Create polyline
-      routeLine = L.polyline(coords, {
+      const routeLine = L.polyline(coords, {
         color: lineColor,
         weight: lineWeight,
         opacity: 0.8,
@@ -103,7 +62,7 @@
       map.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
 
     } catch (err) {
-      console.error("Error initializing map:", err);
+      console.error("Error initializing route map:", err);
     }
   }
 

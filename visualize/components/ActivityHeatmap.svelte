@@ -1,5 +1,15 @@
+<!--
+  Activity Heatmap
+  Displays multiple activity routes overlaid on a map with density-based clustering.
+  Core activities (near the density center) are highlighted more prominently.
+
+  @prop {Array<string>|string} polylines - Encoded polyline strings for activities
+  @prop {number} height - Map height in pixels (default: 500)
+-->
 <script>
   import { onMount, onDestroy } from "svelte";
+  import { decodePolyline } from "./lib/polyline.js";
+  import { isDarkMode, getTileUrl } from "./lib/mapUtils.js";
 
   // Props
   export let polylines = [];
@@ -17,54 +27,6 @@
         maxZoom: 14
       });
     }
-  }
-
-  // Decode Google polyline to array of [lat, lng] pairs
-  function decodePolyline(encoded) {
-    if (!encoded) return [];
-
-    const poly = [];
-    let index = 0,
-      lat = 0,
-      lng = 0;
-
-    while (index < encoded.length) {
-      let shift = 0,
-        result = 0,
-        byte;
-
-      do {
-        byte = encoded.charCodeAt(index++) - 63;
-        result |= (byte & 0x1f) << shift;
-        shift += 5;
-      } while (byte >= 0x20);
-
-      lat += result & 1 ? ~(result >> 1) : result >> 1;
-
-      shift = 0;
-      result = 0;
-
-      do {
-        byte = encoded.charCodeAt(index++) - 63;
-        result |= (byte & 0x1f) << shift;
-        shift += 5;
-      } while (byte >= 0x20);
-
-      lng += result & 1 ? ~(result >> 1) : result >> 1;
-
-      poly.push([lat / 1e5, lng / 1e5]);
-    }
-
-    return poly;
-  }
-
-  function isDarkMode() {
-    if (typeof window === "undefined") return false;
-    return (
-      document.documentElement.classList.contains("dark") ||
-      document.body.classList.contains("dark") ||
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-    );
   }
 
   async function initMap() {
@@ -100,9 +62,7 @@
 
       // Add tile layer based on theme
       const darkMode = isDarkMode();
-      const tileUrl = darkMode
-        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+      const tileUrl = getTileUrl(darkMode);
 
       L.tileLayer(tileUrl, {
         subdomains: "abcd",
@@ -208,7 +168,7 @@
       }
 
     } catch (err) {
-      console.error("Error initializing heatmap:", err);
+      console.error("Error initializing activity heatmap:", err);
     }
   }
 

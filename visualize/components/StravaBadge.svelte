@@ -1,3 +1,9 @@
+<!--
+  Strava Badge
+  Displays a "Follow me on Strava" badge linking to an athlete profile.
+
+  @prop {string} athleteId - Strava athlete ID (default: "109689753")
+-->
 <script>
   export let athleteId = "109689753";
 </script>

@@ -2,6 +2,10 @@
 title: Activity Details
 ---
 
+<script>
+  import ActivityRouteMap from '../../../../components/ActivityRouteMap.svelte';
+</script>
+
 ```sql q_activity_detail__activity
 select
     activity_id,

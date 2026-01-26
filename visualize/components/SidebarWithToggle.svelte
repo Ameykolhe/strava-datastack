@@ -1,3 +1,8 @@
+<!--
+  Sidebar With Toggle
+  Evidence sidebar wrapper that includes a Strava badge and distance unit toggle.
+  Shows the toggle in a fixed position on desktop and in mobile overlay.
+-->
 <script>
 	import { Sidebar } from '@evidence-dev/core-components';
 	import DistanceUnitToggle from './DistanceUnitToggle.svelte';

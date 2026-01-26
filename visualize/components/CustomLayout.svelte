@@ -1,3 +1,9 @@
+<!--
+  Custom Layout
+  Main layout wrapper for the Evidence application.
+  Provides header, sidebar, breadcrumbs, table of contents, and content area.
+  Supports customization via props and frontmatter overrides.
+-->
 <script>
 	import { navigating, page } from '$app/stores';
 	import { dev } from '$app/environment';

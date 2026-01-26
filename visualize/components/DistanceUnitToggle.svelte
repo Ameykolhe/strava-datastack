@@ -1,3 +1,8 @@
+<!--
+  Distance Unit Toggle
+  Toggle switch for km/mi distance units with localStorage persistence.
+  Emits 'distance-unit-change' custom event when unit changes.
+-->
 <script>
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
