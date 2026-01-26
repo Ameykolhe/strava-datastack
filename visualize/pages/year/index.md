@@ -2,15 +2,15 @@
 title: Year in Sports
 ---
 
-```sql distinct_years
+```sql q_year_index__distinct_years
 select
     activity_year,
     max_year
-from strava.distinct_years
+from strava.src_strava__distinct_years
 order by activity_year desc
 ```
 
-{#each distinct_years as y}
+{#each q_year_index__distinct_years as y}
 
 [{y.activity_year}](/year/{y.activity_year})
 

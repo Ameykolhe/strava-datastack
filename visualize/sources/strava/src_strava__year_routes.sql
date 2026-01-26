@@ -1,4 +1,4 @@
 select
     activity_year,
-    to_json(polylines) as polylines
+    polylines_json
 from dbt_sandbox_reporting.rpt_year_routes__year

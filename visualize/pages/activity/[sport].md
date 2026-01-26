@@ -26,14 +26,14 @@ sidebar_link: false
   $: distanceTotalTitle = distanceUnit === 'km' ? 'Total Distance (km)' : 'Total Distance (mi)';
   $: distanceMonthlyTitle = distanceUnit === 'km' ? 'Distance (km)' : 'Distance (mi)';
 
-  $: sportTitle = sport_kpis?.[0]?.sport_type ?? params.sport;
-  $: distanceSupported = sport_kpis?.length > 0 && sport_kpis[0].total_distance_km > 0;
-  $: elevationSupported = sport_kpis?.length > 0 && sport_kpis[0].total_elevation_gain_feet > 0;
-  $: hasPace = activities?.length > 0 && activities[0].pace_min_per_km != null;
-  $: hasHeartRate = activities?.length > 0 && activities[0].average_heartrate_bpm != null;
-  $: hasWatts = activities?.length > 0 && activities[0].average_watts != null;
-  $: hasSpeed = activities?.length > 0 && activities[0].average_speed_kph != null;
-  $: activities_display = activities?.map((row) => ({
+  $: sportTitle = q_activity_sport__kpis?.[0]?.sport_type ?? params.sport;
+  $: distanceSupported = q_activity_sport__kpis?.length > 0 && q_activity_sport__kpis[0].total_distance_km > 0;
+  $: elevationSupported = q_activity_sport__kpis?.length > 0 && q_activity_sport__kpis[0].total_elevation_gain_feet > 0;
+  $: hasPace = q_activity_sport__activities?.length > 0 && q_activity_sport__activities[0].pace_min_per_km != null;
+  $: hasHeartRate = q_activity_sport__activities?.length > 0 && q_activity_sport__activities[0].average_heartrate_bpm != null;
+  $: hasWatts = q_activity_sport__activities?.length > 0 && q_activity_sport__activities[0].average_watts != null;
+  $: hasSpeed = q_activity_sport__activities?.length > 0 && q_activity_sport__activities[0].average_speed_kph != null;
+  $: activities_display = q_activity_sport__activities?.map((row) => ({
     ...row,
     distance_display: distanceUnit === 'km' ? row.distance_km : row.distance_miles
   })) ?? [];
@@ -56,19 +56,19 @@ sidebar_link: false
     if (month) selectedMonth = month;
   };
 
-  $: currentMonth = monthly_stats?.[monthly_stats.length - 1]?.month_label;
+  $: currentMonth = q_activity_sport__kpis_month?.[q_activity_sport__kpis_month.length - 1]?.month_label;
   $: if (!selectedMonth && currentMonth) selectedMonth = currentMonth;
-  $: selectedRow = monthly_stats?.find((d) => d.month_label === selectedMonth) ??
-    (monthly_stats?.length ? monthly_stats[monthly_stats.length - 1] : null);
-  $: selectedIndex = monthly_stats?.findIndex((d) => d.month_label === selectedRow?.month_label) ?? -1;
-  $: prevRow = selectedIndex > 0 ? monthly_stats[selectedIndex - 1] : null;
+  $: selectedRow = q_activity_sport__kpis_month?.find((d) => d.month_label === selectedMonth) ??
+    (q_activity_sport__kpis_month?.length ? q_activity_sport__kpis_month[q_activity_sport__kpis_month.length - 1] : null);
+  $: selectedIndex = q_activity_sport__kpis_month?.findIndex((d) => d.month_label === selectedRow?.month_label) ?? -1;
+  $: prevRow = selectedIndex > 0 ? q_activity_sport__kpis_month[selectedIndex - 1] : null;
 
   $: selectedWithComparisons = selectedRow ? {
     ...selectedRow,
     month_start: toDate(selectedRow?.month_start),
     distance_change: distanceSupported ? pctChange(selectedRow?.[distanceMonthlyField], prevRow?.[distanceMonthlyField]) : null,
     time_change: pctChange(selectedRow?.total_moving_time_hours, prevRow?.total_moving_time_hours),
-    elevation_change: elevationSupported ? pctChange(selectedRow?.total_elevation_feet, prevRow?.total_elevation_feet) : null,
+    elevation_change: elevationSupported ? pctChange(selectedRow?.total_elevation_gain_feet, prevRow?.total_elevation_gain_feet) : null,
     count_change: pctChange(selectedRow?.activity_count, prevRow?.activity_count)
   } : null;
   const toDate = (value) => (value ? new Date(value) : value);
@@ -86,7 +86,7 @@ sidebar_link: false
   $: selectedMonthTitleText = selectedMonthTitle ? `- ${selectedMonthTitle}` : '';
 </script>
 
-```sql sport_kpis
+```sql q_activity_sport__kpis
 select
     sport_type,
     sport_slug,
@@ -98,26 +98,26 @@ select
     avg_speed_kmh,
     avg_heartrate_bpm,
     avg_pace_min_per_km
-from strava.sport_kpis
+from strava.src_strava__kpis_sport_type
 where sport_slug = '${params.sport}'
 ```
 
-```sql monthly_stats
+```sql q_activity_sport__kpis_month
 select
-    cast(month_start as date) as month_start,
+    month_start,
     month_label,
     activity_count,
     total_distance_km,
     total_distance_miles,
     total_moving_time_hours,
-    total_elevation_feet,
+    total_elevation_gain_feet,
     avg_heartrate_bpm
-from strava.sport_trends_12mo
-where lower(sport_type) = '${params.sport}'
+from strava.src_strava__kpis_sport_type_year_month
+where sport_slug = '${params.sport}'
 order by month_start
 ```
 
-```sql activities
+```sql q_activity_sport__activities
 select
     activity_id,
     activity_name,
@@ -131,8 +131,8 @@ select
     average_heartrate_bpm,
     average_watts,
     activity_link
-from strava.activity_list
-where lower(sport_type) = '${params.sport}'
+from strava.src_strava__activity_list
+where sport_slug = '${params.sport}'
 order by started_at desc
 ```
 
@@ -141,14 +141,14 @@ order by started_at desc
 ## Overview
 
 <BigValue
-    data={sport_kpis}
+    data={q_activity_sport__kpis}
     value=activity_count
     title="Total Activities"
     fmt="#,#0"
 />
 
 <BigValue
-    data={sport_kpis}
+    data={q_activity_sport__kpis}
     value=total_moving_time_hours
     title="Total Time (hrs)"
     fmt="#,#0.0"
@@ -156,7 +156,7 @@ order by started_at desc
 
 {#if distanceSupported}
 <BigValue
-    data={sport_kpis}
+    data={q_activity_sport__kpis}
     value={distanceTotalField}
     title={distanceTotalTitle}
     fmt="#,#0.0"
@@ -165,34 +165,34 @@ order by started_at desc
 
 {#if elevationSupported}
 <BigValue
-    data={sport_kpis}
+    data={q_activity_sport__kpis}
     value=total_elevation_gain_feet
     title="Elevation Gain (ft)"
     fmt="#,#0"
 />
 {/if}
 
-{#if sport_kpis.length > 0 && sport_kpis[0].avg_speed_kmh != null}
+{#if q_activity_sport__kpis.length > 0 && q_activity_sport__kpis[0].avg_speed_kmh != null}
 <BigValue
-    data={sport_kpis}
+    data={q_activity_sport__kpis}
     value=avg_speed_kmh
     title="Avg Speed (km/h)"
     fmt="#,#0.0"
 />
 {/if}
 
-{#if sport_kpis.length > 0 && sport_kpis[0].avg_pace_min_per_km != null}
+{#if q_activity_sport__kpis.length > 0 && q_activity_sport__kpis[0].avg_pace_min_per_km != null}
 <BigValue
-    data={sport_kpis}
+    data={q_activity_sport__kpis}
     value=avg_pace_min_per_km
     title="Avg Pace (min/km)"
     fmt="#,#0.00"
 />
 {/if}
 
-{#if sport_kpis.length > 0 && sport_kpis[0].avg_heartrate_bpm != null}
+{#if q_activity_sport__kpis.length > 0 && q_activity_sport__kpis[0].avg_heartrate_bpm != null}
 <BigValue
-    data={sport_kpis}
+    data={q_activity_sport__kpis}
     value=avg_heartrate_bpm
     title="Avg HR (bpm)"
     fmt="#,#0"
@@ -212,7 +212,7 @@ order by started_at desc
   {/if}
   <BigValue data={[selectedWithComparisons]} value=total_moving_time_hours comparison=time_change comparisonFmt=pct1 comparisonTitle="MoM" title="Time (hrs)" fmt="#,#0.0"/>
   {#if elevationSupported}
-  <BigValue data={[selectedWithComparisons]} value=total_elevation_feet comparison=elevation_change comparisonFmt=pct1 comparisonTitle="MoM" title="Elevation (ft)" fmt="#,#0"/>
+  <BigValue data={[selectedWithComparisons]} value=total_elevation_gain_feet comparison=elevation_change comparisonFmt=pct1 comparisonTitle="MoM" title="Elevation (ft)" fmt="#,#0"/>
   {/if}
   <BigValue data={[selectedWithComparisons]} value=activity_count comparison=count_change comparisonFmt=pct1 comparisonTitle="MoM" title="Activity Count" fmt="#,#0"/>
 </div>
@@ -221,7 +221,7 @@ order by started_at desc
 <ECharts
     on:click={handleMonthlyEvent}
     on:mouseover={handleMonthlyEvent}
-    data={monthly_stats}
+    data={q_activity_sport__kpis_month}
     showAllXAxisLabels
     config={{
         backgroundColor: 'transparent',
@@ -267,7 +267,7 @@ order by started_at desc
             }
         ],
         dataset: {
-            source: monthly_stats
+            source: q_activity_sport__kpis_month
         },
         dataZoom: [
             {
@@ -281,8 +281,8 @@ order by started_at desc
                 moveOnMouseMove: false,
                 preventDefaultMouseWheel: true,
                 preventDefaultMouseMove: true,
-                startValue: monthly_stats.length > 12 ? monthly_stats[monthly_stats.length - 12]?.month_label : monthly_stats[0]?.month_label,
-                endValue: monthly_stats[monthly_stats.length - 1]?.month_label
+                startValue: q_activity_sport__kpis_month.length > 12 ? q_activity_sport__kpis_month[q_activity_sport__kpis_month.length - 12]?.month_label : q_activity_sport__kpis_month[0]?.month_label,
+                endValue: q_activity_sport__kpis_month[q_activity_sport__kpis_month.length - 1]?.month_label
             },
             {
                 type: 'slider',
@@ -291,8 +291,8 @@ order by started_at desc
                 height: 50,
                 bottom: 8,
                 showDetail: false,
-                startValue: monthly_stats.length > 12 ? monthly_stats[monthly_stats.length - 12]?.month_label : monthly_stats[0]?.month_label,
-                endValue: monthly_stats[monthly_stats.length - 1]?.month_label
+                startValue: q_activity_sport__kpis_month.length > 12 ? q_activity_sport__kpis_month[q_activity_sport__kpis_month.length - 12]?.month_label : q_activity_sport__kpis_month[0]?.month_label,
+                endValue: q_activity_sport__kpis_month[q_activity_sport__kpis_month.length - 1]?.month_label
             }
         ],
         series: [
@@ -324,7 +324,7 @@ order by started_at desc
                 showSymbol: false,
                 triggerLineEvent: true,
                 cursor: 'pointer',
-                encode: { x: 'month_label', y: 'total_elevation_feet' }
+                encode: { x: 'month_label', y: 'total_elevation_gain_feet' }
             }] : []),
             {
                 name: 'Activity Count',
@@ -366,12 +366,3 @@ order by started_at desc
 </DataTable>
 
 [Back to Activities](/activity)
-
-<style>
-  .monthly-kpis {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
-    margin: 12px 0 16px;
-  }
-</style>

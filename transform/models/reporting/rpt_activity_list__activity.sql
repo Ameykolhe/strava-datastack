@@ -15,6 +15,8 @@
       - elevation_gain_meters, elevation_gain_feet
       - average_speed_kph, average_speed_mph
       - pace_min_per_km, pace_min_per_mile
+      - kudos_count, comment_count, achievement_count, pr_count, suffer_score
+      - kilojoules, calories_burned
 */
 
 with activities as (
@@ -22,6 +24,7 @@ with activities as (
         activity_id,
         activity_name,
         sport_type,
+        lower(sport_type) as sport_slug,
         workout_type,
         started_at,
         started_at_local,
@@ -51,6 +54,11 @@ with activities as (
         max_heartrate_bpm,
         average_watts,
         kilojoules,
+        kudos_count,
+        comment_count,
+        achievement_count,
+        pr_count,
+        suffer_score,
         has_heartrate,
         has_power_meter,
         polyline
@@ -62,6 +70,7 @@ final as (
         activity_id,
         activity_name,
         sport_type,
+        sport_slug,
         workout_type,
         started_at,
         started_at_local,
@@ -91,10 +100,19 @@ final as (
         max_heartrate_bpm,
         average_watts,
         kilojoules,
+        case
+            when kilojoules is not null then round(kilojoules * 0.239006, 0)
+            else null
+        end as calories_burned,
+        kudos_count,
+        comment_count,
+        achievement_count,
+        pr_count,
+        suffer_score,
         has_heartrate,
         has_power_meter,
         polyline as map_summary_polyline,
-        '/activity/' || lower(sport_type) || '/' || activity_id as activity_link
+        '/activity/' || sport_slug || '/' || activity_id as activity_link
     from activities
 )
 
@@ -102,6 +120,7 @@ select
     activity_id,
     activity_name,
     sport_type,
+    sport_slug,
     workout_type,
     started_at,
     started_at_local,
@@ -131,6 +150,12 @@ select
     max_heartrate_bpm,
     average_watts,
     kilojoules,
+    calories_burned,
+    kudos_count,
+    comment_count,
+    achievement_count,
+    pr_count,
+    suffer_score,
     has_heartrate,
     has_power_meter,
     map_summary_polyline,

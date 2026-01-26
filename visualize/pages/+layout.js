@@ -91,10 +91,10 @@ async function addYearLinksToManifest(pagesManifest, query) {
 	const years = await query(
 		`
 		select activity_year
-		from strava.distinct_years
+		from strava.src_strava__distinct_years
 		order by activity_year desc
 		`,
-		{ query_name: 'sidebar_years' }
+		{ query_name: 'q_layout__sidebar_years' }
 	);
 
 	if (!Array.isArray(years) || years.length === 0) return;
@@ -125,10 +125,10 @@ async function addSportLinksToManifest(pagesManifest, query) {
 	const sports = await query(
 		`
 		select sport_type, sport_slug
-		from strava.activities_by_sport
+		from strava.src_strava__kpis_sport_type
 		order by activity_count desc, sport_type
 		`,
-		{ query_name: 'sidebar_sports' }
+		{ query_name: 'q_layout__sidebar_sports' }
 	);
 
 	if (!Array.isArray(sports) || sports.length === 0) return;

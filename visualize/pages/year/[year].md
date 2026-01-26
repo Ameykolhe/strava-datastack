@@ -4,6 +4,8 @@ sidebar_link: false
 ---
 
 <script>
+  import { goto } from '$app/navigation';
+
   let selectedMonth = null;
   let distanceUnit = 'km';
   const isBrowser = typeof window !== 'undefined';
@@ -25,15 +27,25 @@ sidebar_link: false
   $: distanceSeriesName = distanceUnit === 'km' ? 'Distance (km)' : 'Distance (mi)';
   $: distanceTotalTitle = distanceUnit === 'km' ? 'Total Distance (km)' : 'Total Distance (mi)';
   $: distanceMonthlyTitle = distanceUnit === 'km' ? 'Distance (km)' : 'Distance (mi)';
-  $: year_sport_summary_display = year_sport_summary?.map((row) => ({
+  $: year_sport_summary_display = q_year__sport_summary?.map((row) => ({
     ...row,
     distance_display: distanceUnit === 'km' ? row.total_distance_km : row.total_distance_miles,
     sport_link: `/year/${params.year}/${row.sport_slug}`
   })) ?? [];
+  $: year_sport_summary_pie = year_sport_summary_display?.map((row) => ({
+    name: row.sport_type,
+    value: row.activity_count,
+    sport_slug: row.sport_slug
+  })) ?? [];
+  $: year_sport_time_pie = year_sport_summary_display?.map((row) => ({
+    name: row.sport_type,
+    value: row.total_moving_time_hours,
+    sport_slug: row.sport_slug
+  })) ?? [];
 
   $: currentYear = Number(params.year);
-  $: currentKpi = year_kpis?.find((row) => row.activity_year === currentYear) ?? null;
-  $: prevKpi = year_kpis?.find((row) => row.activity_year === currentYear - 1) ?? null;
+  $: currentKpi = q_year__kpis?.find((row) => row.activity_year === currentYear) ?? null;
+  $: prevKpi = q_year__kpis?.find((row) => row.activity_year === currentYear - 1) ?? null;
   $: yearKpisWithComparisons = currentKpi ? {
     ...currentKpi,
     distance_change: pctChange(currentKpi?.[distanceTotalField], prevKpi?.[distanceTotalField]),
@@ -60,12 +72,18 @@ sidebar_link: false
     if (month) selectedMonth = month;
   };
 
-  $: currentMonth = year_monthly?.[year_monthly.length - 1]?.month_label;
+  const handleSportPieClick = (event) => {
+    const payload = event?.detail ?? event;
+    const slug = payload?.data?.sport_slug;
+    if (slug && isBrowser) goto(`/year/${params.year}/${slug}`);
+  };
+
+  $: currentMonth = q_year__monthly?.[q_year__monthly.length - 1]?.month_label;
   $: if (!selectedMonth && currentMonth) selectedMonth = currentMonth;
-  $: selectedRow = year_monthly?.find((d) => d.month_label === selectedMonth) ??
-    (year_monthly?.length ? year_monthly[year_monthly.length - 1] : null);
-  $: selectedIndex = year_monthly?.findIndex((d) => d.month_label === selectedRow?.month_label) ?? -1;
-  $: prevRow = selectedIndex > 0 ? year_monthly[selectedIndex - 1] : null;
+  $: selectedRow = q_year__monthly?.find((d) => d.month_label === selectedMonth) ??
+    (q_year__monthly?.length ? q_year__monthly[q_year__monthly.length - 1] : null);
+  $: selectedIndex = q_year__monthly?.findIndex((d) => d.month_label === selectedRow?.month_label) ?? -1;
+  $: prevRow = selectedIndex > 0 ? q_year__monthly[selectedIndex - 1] : null;
 
   $: selectedWithComparisons = selectedRow ? {
     ...selectedRow,
@@ -90,7 +108,7 @@ sidebar_link: false
   $: selectedMonthTitleText = selectedMonthTitle ? `- ${selectedMonthTitle}` : '';
 </script>
 
-```sql year_kpis
+```sql q_year__kpis
 select
     activity_year,
     activity_count,
@@ -101,35 +119,35 @@ select
     longest_distance_miles,
     hardest_elevation_gain_feet,
     avg_speed_mph
-from strava.year_kpis
+from strava.src_strava__kpis_year
 where activity_year in (${params.year}, ${params.year} - 1)
 ```
 
-```sql year_streaks
+```sql q_year__streaks
 select
     activity_year,
     current_streak,
     longest_streak,
     active_days_year
-from strava.year_streaks
+from strava.src_strava__streaks_year
 where activity_year = ${params.year}
 ```
 
-```sql year_monthly
+```sql q_year__monthly
 select
-    cast(month_start as date) as month_start,
+    month_start,
     month_label,
     activity_count,
     total_distance_km,
     total_distance_miles,
     total_moving_time_hours,
     total_elevation_gain_feet
-from strava.year_monthly
+from strava.src_strava__kpis_year_month
 where activity_year = ${params.year}
 order by month_start
 ```
 
-```sql year_sport_summary
+```sql q_year__sport_summary
 select
     sport_type,
     sport_slug,
@@ -137,34 +155,27 @@ select
     total_moving_time_hours,
     total_distance_km,
     total_distance_miles
-from strava.year_sport_summary
+from strava.src_strava__kpis_sport_type_year
 where activity_year = ${params.year}
+  and activity_count > 0
 order by activity_count desc
 ```
 
-```sql year_calendar
+```sql q_year__calendar
 select
     activity_date,
     activity_count
-from strava.home_daily_trends
+from strava.src_strava__activity_daily_trends
 where activity_year = ${params.year}
 order by activity_date
 ```
 
-```sql year_routes
+```sql q_year__routes
 select
     activity_year,
-    polylines
-from strava.year_routes
+    polylines_json
+from strava.src_strava__year_routes
 where activity_year = ${params.year}
-```
-
-```sql distinct_years
-select
-    activity_year,
-    max_year
-from strava.distinct_years
-order by activity_year desc
 ```
 
 # {params.year}
@@ -214,14 +225,14 @@ order by activity_year desc
 ## Streaks
 
 <BigValue
-    data={year_streaks}
+    data={q_year__streaks}
     value=active_days_year
     title="Active Days (year)"
     fmt="#,#0"
 />
 
 <BigValue
-    data={year_streaks}
+    data={q_year__streaks}
     value=longest_streak
     title="Longest Streak (days)"
     fmt="#,#0"
@@ -230,7 +241,7 @@ order by activity_year desc
 ## Activity Calendar
 
 <CalendarHeatmap
-data={year_calendar}
+data={q_year__calendar}
 date=activity_date
 value=activity_count
 min=0
@@ -253,10 +264,11 @@ legend=false
 </div>
 {/if}
 
+{#if q_year__monthly && q_year__monthly.length >= 2}
 <ECharts
     on:click={handleMonthlyEvent}
     on:mouseover={handleMonthlyEvent}
-    data={year_monthly}
+    data={q_year__monthly}
     showAllXAxisLabels
     config={{
         backgroundColor: 'transparent',
@@ -302,7 +314,7 @@ legend=false
             }
         ],
         dataset: {
-            source: year_monthly
+            source: q_year__monthly
         },
         dataZoom: [
             {
@@ -313,8 +325,8 @@ legend=false
                 zoomOnMouseMove: false,
                 moveOnMouseWheel: true,
                 moveOnMouseMove: true,
-                startValue: year_monthly.length > 12 ? year_monthly[year_monthly.length - 12]?.month_label : year_monthly[0]?.month_label,
-                endValue: year_monthly[year_monthly.length - 1]?.month_label
+                startValue: q_year__monthly.length > 12 ? q_year__monthly[q_year__monthly.length - 12]?.month_label : q_year__monthly[0]?.month_label,
+                endValue: q_year__monthly[q_year__monthly.length - 1]?.month_label
             }
         ],
         series: [
@@ -360,21 +372,88 @@ legend=false
         ]
     }}
 />
+{/if}
 
 ## By Sport Type
 
-<DataTable data={year_sport_summary_display} link=sport_link>
-    <Column id=sport_type title="Sport"/>
-    <Column id=activity_count title="Activities"/>
-    <Column id=total_moving_time_hours title="Time (hrs)"/>
-</DataTable>
+{#if year_sport_summary_pie.length > 0 || year_sport_time_pie.length > 0}
+<div class="sport-summary-charts">
+  {#if year_sport_summary_pie.length > 0}
+  <ECharts
+      on:click={handleSportPieClick}
+      data={year_sport_summary_pie}
+      config={{
+          backgroundColor: 'transparent',
+          tooltip: { trigger: 'item' },
+          legend: { show: false },
+          title: {
+              text: 'Activities',
+              left: '35%',
+              top: '50%',
+              textAlign: 'center',
+              textVerticalAlign: 'middle'
+          },
+          series: [
+              {
+                  name: 'Activities',
+                  type: 'pie',
+                  radius: ['30%', '70%'],
+                  center: ['35%', '50%'],
+                  avoidLabelOverlap: false,
+                  itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 1 },
+                  label: { show: false },
+                  labelLine: { show: false },
+                  data: year_sport_summary_pie
+              }
+          ]
+      }}
+  />
+  {/if}
+
+  {#if year_sport_time_pie.length > 0}
+  <ECharts
+      on:click={handleSportPieClick}
+      data={year_sport_time_pie}
+      config={{
+          backgroundColor: 'transparent',
+          tooltip: { trigger: 'item' },
+          legend: {
+              top: 'middle',
+              right: 0,
+              orient: 'vertical'
+          },
+          title: {
+              text: 'Time (hrs)',
+              left: '35%',
+              top: '50%',
+              textAlign: 'center',
+              textVerticalAlign: 'middle'
+          },
+          series: [
+              {
+                  name: 'Time (hrs)',
+                  type: 'pie',
+                  radius: ['30%', '70%'],
+                  center: ['35%', '50%'],
+                  avoidLabelOverlap: false,
+                  itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 1 },
+                  label: { show: false },
+                  labelLine: { show: false },
+                  data: year_sport_time_pie
+              }
+          ]
+      }}
+  />
+  {/if}
+</div>
+{/if}
 
 ## Activity Heatmap
 
-{#if year_routes.length > 0 && year_routes[0].polylines}
+{#if q_year__routes.length > 0 && q_year__routes[0].polylines_json}
 
 <ActivityHeatmap
-polylines={year_routes[0].polylines}
+    polylines={q_year__routes[0].polylines_json}
 height={500}
 />
 
@@ -385,10 +464,15 @@ No routes available to display for this year.
 {/if}
 
 <style>
-  .monthly-kpis {
+  .sport-summary-charts {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
-    margin: 12px 0 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  @media (max-width: 900px) {
+    .sport-summary-charts {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

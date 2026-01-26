@@ -3,6 +3,8 @@ title: Activities
 ---
 
 <script>
+  import { goto } from '$app/navigation';
+
   let selectedMonth = null;
   let distanceUnit = 'km';
   const isBrowser = typeof window !== 'undefined';
@@ -28,18 +30,34 @@ title: Activities
   $: distanceSeriesName = distanceUnit === 'km' ? 'Distance (km)' : 'Distance (mi)';
   $: distanceTotalTitle = distanceUnit === 'km' ? 'Total Distance (km)' : 'Total Distance (mi)';
   $: distanceMonthlyTitle = distanceUnit === 'km' ? 'Distance (km)' : 'Distance (mi)';
-  $: recent_activities_display = recent_activities?.map((row) => ({
+  $: recent_activities_display = q_activity__recent_activities?.map((row) => ({
     ...row,
     distance_display: distanceUnit === 'km' ? row.distance_km : row.distance_miles
   })) ?? [];
   const indoorSports = new Set(['Badminton', 'Pickleball', 'Workout']);
-  $: sport_summary_display = sport_summary?.map((row) => ({
+  $: sport_summary_display = q_activity__sport_summary?.map((row) => ({
     ...row,
     distance_display: indoorSports.has(row.sport_type)
       ? null
       : (distanceUnit === 'km' ? row.total_distance_km : row.total_distance_miles),
     sport_link: `/activity/${row.sport_slug}`
   })) ?? [];
+  $: sport_summary_pie = sport_summary_display?.map((row) => ({
+    name: row.sport_type,
+    value: row.activity_count,
+    sport_slug: row.sport_slug
+  })) ?? [];
+  $: sport_time_pie = sport_summary_display?.map((row) => ({
+    name: row.sport_type,
+    value: row.total_moving_time_hours,
+    sport_slug: row.sport_slug
+  })) ?? [];
+
+  const handleSportPieClick = (event) => {
+    const payload = event?.detail ?? event;
+    const slug = payload?.data?.sport_slug;
+    if (slug && isBrowser) goto(`/activity/${slug}`);
+  };
 
   const monthFromEvent = (event) => {
     if (!event) return null;
@@ -59,19 +77,19 @@ title: Activities
     if (month) selectedMonth = month;
   };
 
-  $: currentMonth = home_trends_12mo?.[home_trends_12mo.length - 1]?.month_label;
+  $: currentMonth = q_activity__trends_monthly?.[q_activity__trends_monthly.length - 1]?.month_label;
   $: if (!selectedMonth && currentMonth) selectedMonth = currentMonth;
-  $: selectedRow = home_trends_12mo?.find((d) => d.month_label === selectedMonth) ??
-    (home_trends_12mo?.length ? home_trends_12mo[home_trends_12mo.length - 1] : null);
-  $: selectedIndex = home_trends_12mo?.findIndex((d) => d.month_label === selectedRow?.month_label) ?? -1;
-  $: prevRow = selectedIndex > 0 ? home_trends_12mo[selectedIndex - 1] : null;
+  $: selectedRow = q_activity__trends_monthly?.find((d) => d.month_label === selectedMonth) ??
+    (q_activity__trends_monthly?.length ? q_activity__trends_monthly[q_activity__trends_monthly.length - 1] : null);
+  $: selectedIndex = q_activity__trends_monthly?.findIndex((d) => d.month_label === selectedRow?.month_label) ?? -1;
+  $: prevRow = selectedIndex > 0 ? q_activity__trends_monthly[selectedIndex - 1] : null;
 
   $: selectedWithComparisons = selectedRow ? {
     ...selectedRow,
     month_start: toDate(selectedRow?.month_start),
     distance_change: pctChange(selectedRow?.[distanceMonthlyField], prevRow?.[distanceMonthlyField]),
     time_change: pctChange(selectedRow?.total_moving_time_hours, prevRow?.total_moving_time_hours),
-    elevation_change: pctChange(selectedRow?.total_elevation_feet, prevRow?.total_elevation_feet),
+    elevation_change: pctChange(selectedRow?.total_elevation_gain_feet, prevRow?.total_elevation_gain_feet),
     count_change: pctChange(selectedRow?.activity_count, prevRow?.activity_count)
   } : null;
   const toDate = (value) => (value ? new Date(value) : value);
@@ -89,50 +107,51 @@ title: Activities
   $: selectedMonthTitleText = selectedMonthTitle ? `- ${selectedMonthTitle}` : '';
 </script>
 
-```sql home_kpis
+```sql q_activity__kpis_alltime
 select
-    total_activity_count,
+    activity_count,
     total_distance_km,
     total_distance_miles,
     total_moving_time_hours,
     total_elevation_gain_feet,
     avg_speed_mph
-from strava.home_kpis
+from strava.src_strava__kpis_all
 ```
 
-```sql home_trends_12mo
+```sql q_activity__trends_monthly
 select
-    cast(month_start as date) as month_start,
+    month_start,
     month_label,
     activity_count,
     total_distance_km,
     total_distance_miles,
     total_moving_time_hours,
     total_elevation_gain_feet
-from strava.home_trends_12mo
+from strava.src_strava__kpis_year_month
 order by month_start
 ```
 
-```sql home_streaks
+```sql q_activity__streaks_alltime
 select
     current_streak,
     longest_streak,
     active_days_last_30
-from strava.home_streaks
+from strava.src_strava__streaks_all
 ```
 
-```sql sport_summary
+```sql q_activity__sport_summary
 select
     sport_type,
     activity_count,
     total_moving_time_hours,
     total_distance_km,
     sport_slug
-from strava.activities_by_sport
+from strava.src_strava__kpis_sport_type
+where activity_count > 0
 order by activity_count desc
 ```
 
-```sql recent_activities
+```sql q_activity__recent_activities
 select
     activity_id,
     activity_name,
@@ -144,7 +163,7 @@ select
     average_speed_mph,
     pace_min_per_km,
     activity_link
-from strava.activity_list
+from strava.src_strava__activity_list
 order by started_at desc
 limit 20
 ```
@@ -152,35 +171,35 @@ limit 20
 ## Overview
 
 <BigValue
-    data={home_kpis}
-    value=total_activity_count
+    data={q_activity__kpis_alltime}
+    value=activity_count
     title="Total Activities"
     fmt="#,#0"
 />
 
 <BigValue
-    data={home_kpis}
+    data={q_activity__kpis_alltime}
     value={distanceTotalField}
     title={distanceTotalTitle}
     fmt="#,#0.0"
 />
 
 <BigValue
-    data={home_kpis}
+    data={q_activity__kpis_alltime}
     value=total_moving_time_hours
     title="Total Time (hrs)"
     fmt="#,#0"
 />
 
 <BigValue
-    data={home_kpis}
+    data={q_activity__kpis_alltime}
     value=total_elevation_gain_feet
     title="Elevation Gain (ft)"
     fmt="#,#0"
 />
 
 <BigValue
-    data={home_kpis}
+    data={q_activity__kpis_alltime}
     value=avg_speed_mph
     title="Avg Speed (mph)"
     fmt="#,#0.0"
@@ -189,21 +208,21 @@ limit 20
 ## Streaks
 
 <BigValue
-    data={home_streaks}
+    data={q_activity__streaks_alltime}
     value=current_streak
     title="Current Streak (days)"
     fmt="#,#0"
 />
 
 <BigValue
-    data={home_streaks}
+    data={q_activity__streaks_alltime}
     value=longest_streak
     title="Longest Streak (days)"
     fmt="#,#0"
 />
 
 <BigValue
-    data={home_streaks}
+    data={q_activity__streaks_alltime}
     value=active_days_last_30
     title="Active Days (last 30)"
     fmt="#,#0"
@@ -227,7 +246,7 @@ limit 20
 <ECharts
     on:click={handleMonthlyEvent}
     on:mouseover={handleMonthlyEvent}
-    data={home_trends_12mo}
+    data={q_activity__trends_monthly}
     showAllXAxisLabels
     config={{
         backgroundColor: 'transparent',
@@ -273,7 +292,7 @@ limit 20
             }
         ],
         dataset: {
-            source: home_trends_12mo
+            source: q_activity__trends_monthly
         },
         dataZoom: [
             {
@@ -287,8 +306,8 @@ limit 20
                 moveOnMouseMove: false,
                 preventDefaultMouseWheel: true,
                 preventDefaultMouseMove: true,
-                startValue: home_trends_12mo.length > 12 ? home_trends_12mo[home_trends_12mo.length - 12]?.month_label : home_trends_12mo[0]?.month_label,
-                endValue: home_trends_12mo[home_trends_12mo.length - 1]?.month_label
+                startValue: q_activity__trends_monthly.length > 12 ? q_activity__trends_monthly[q_activity__trends_monthly.length - 12]?.month_label : q_activity__trends_monthly[0]?.month_label,
+                endValue: q_activity__trends_monthly[q_activity__trends_monthly.length - 1]?.month_label
             },
             {
                 type: 'slider',
@@ -297,8 +316,8 @@ limit 20
                 height: 50,
                 bottom: 8,
                 showDetail: false,
-                startValue: home_trends_12mo.length > 12 ? home_trends_12mo[home_trends_12mo.length - 12]?.month_label : home_trends_12mo[0]?.month_label,
-                endValue: home_trends_12mo[home_trends_12mo.length - 1]?.month_label
+                startValue: q_activity__trends_monthly.length > 12 ? q_activity__trends_monthly[q_activity__trends_monthly.length - 12]?.month_label : q_activity__trends_monthly[0]?.month_label,
+                endValue: q_activity__trends_monthly[q_activity__trends_monthly.length - 1]?.month_label
             }
         ],
         series: [
@@ -347,14 +366,77 @@ limit 20
 
 ## By Sport Type
 
-### All Time 
+{#if sport_summary_pie.length > 0 || sport_time_pie.length > 0}
+<div class="sport-summary-charts">
+  {#if sport_summary_pie.length > 0}
+  <ECharts
+      on:click={handleSportPieClick}
+      data={sport_summary_pie}
+      config={{
+          backgroundColor: 'transparent',
+          tooltip: { trigger: 'item' },
+          legend: { show: false },
+          title: {
+              text: 'Activities',
+              left: '35%',
+              top: '50%',
+              textAlign: 'center',
+              textVerticalAlign: 'middle'
+          },
+          series: [
+              {
+                  name: 'Activities',
+                  type: 'pie',
+                  radius: ['30%', '70%'],
+                  center: ['35%', '50%'],
+                  avoidLabelOverlap: false,
+                  itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 1 },
+                  label: { show: false },
+                  labelLine: { show: false },
+                  data: sport_summary_pie
+              }
+          ]
+      }}
+  />
+  {/if}
 
-<DataTable data={sport_summary_display} link=sport_link>
-    <Column id=sport_type title="Sport"/>
-    <Column id=activity_count title="Activities"/>
-    <Column id=total_moving_time_hours title="Time (hrs)"/>
-    <Column id=distance_display title={`Distance (${distanceUnitLabel})`}/>
-</DataTable>
+  {#if sport_time_pie.length > 0}
+  <ECharts
+      on:click={handleSportPieClick}
+      data={sport_time_pie}
+      config={{
+          backgroundColor: 'transparent',
+          tooltip: { trigger: 'item' },
+          legend: {
+              top: 'middle',
+              right: 0,
+              orient: 'vertical'
+          },
+          title: {
+              text: 'Time (hrs)',
+              left: '35%',
+              top: '50%',
+              textAlign: 'center',
+              textVerticalAlign: 'middle'
+          },
+          series: [
+              {
+                  name: 'Time (hrs)',
+                  type: 'pie',
+                  radius: ['30%', '70%'],
+                  center: ['35%', '50%'],
+                  avoidLabelOverlap: false,
+                  itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 1 },
+                  label: { show: false },
+                  labelLine: { show: false },
+                  data: sport_time_pie
+              }
+          ]
+      }}
+  />
+  {/if}
+</div>
+{/if}
 
 ## Recent Activities
 
@@ -368,10 +450,15 @@ limit 20
 </DataTable>
 
 <style>
-  .monthly-kpis {
+  .sport-summary-charts {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
-    margin: 12px 0 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  @media (max-width: 900px) {
+    .sport-summary-charts {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

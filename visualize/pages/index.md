@@ -2,34 +2,34 @@
 title: Strava Dashboard
 ---
 
-```sql home_kpis
+```sql q_home__kpis_alltime
 select
-    total_activity_count,
+    activity_count,
     total_distance_miles,
     total_moving_time_hours,
     total_elevation_gain_feet,
     avg_speed_mph
-from strava.home_kpis
+from strava.src_strava__kpis_all
 ```
 
-```sql sport_mix
+```sql q_home__sport_mix
 select
     sport_type,
     activity_count,
     total_distance_miles,
     total_moving_time_hours
-from strava.sport_mix
+from strava.src_strava__kpis_sport_type
 ```
 
-```sql distinct_years
+```sql q_home__distinct_years
 select
     activity_year,
     max_year
-from strava.distinct_years
+from strava.src_strava__distinct_years
 order by activity_year desc
 ```
 
-```sql activity_list
+```sql q_home__recent_activities
 select
     activity_id,
     activity_name,
@@ -39,41 +39,41 @@ select
     moving_time_seconds,
     elevation_gain_feet,
     activity_link
-from strava.activity_list
+from strava.src_strava__activity_list
 limit 10
 ```
 
 ## Overview
 
 <BigValue
-    data={home_kpis}
-    value=total_activity_count
+    data={q_home__kpis_alltime}
+    value=activity_count
     title="Total Activities"
 />
 
 <BigValue
-    data={home_kpis}
+    data={q_home__kpis_alltime}
     value=total_distance_miles
     title="Total Distance (mi)"
     fmt='#,##0.0'
 />
 
 <BigValue
-    data={home_kpis}
+    data={q_home__kpis_alltime}
     value=total_moving_time_hours
     title="Total Time (hrs)"
     fmt='#,##0'
 />
 
 <BigValue
-    data={home_kpis}
+    data={q_home__kpis_alltime}
     value=total_elevation_gain_feet
     title="Total Elevation (ft)"
     fmt='#,##0'
 />
 
 <BigValue
-    data={home_kpis}
+    data={q_home__kpis_alltime}
     value=avg_speed_mph
     title="Avg Speed (mph)"
     fmt='#,##0.1'
@@ -83,30 +83,17 @@ limit 10
 
 <Dropdown
     name=trend_year_filter
-    data={distinct_years}
+    data={q_home__distinct_years}
     value=activity_year
-    defaultValue={distinct_years[0].max_year}
+    defaultValue={q_home__distinct_years[0].max_year}
     order=activity_year desc
     title="Select Year"
 />
 
-```sql filtered_daily_trends
-select
-    activity_date,
-    activity_year,
-    activity_count,
-    total_distance_miles,
-    total_moving_time_hours,
-    total_elevation_gain_feet,
-    avg_speed_mph
-from strava.home_daily_trends
-where activity_year = ${inputs.trend_year_filter.value}
-```
-
 ### Activities by Sport
 
 <BarChart
-    data={sport_mix}
+    data={q_home__sport_mix}
     x=sport_type
     y=total_distance_miles
     title="Distance by Sport"
@@ -117,7 +104,7 @@ where activity_year = ${inputs.trend_year_filter.value}
 ## Recent Activities
 
 <DataTable
-    data={activity_list}
+    data={q_home__recent_activities}
     link=activity_link
 >
     <Column id=activity_name title="Activity"/>

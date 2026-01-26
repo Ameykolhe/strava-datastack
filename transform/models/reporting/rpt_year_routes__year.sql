@@ -29,5 +29,6 @@ aggregated as (
 
 select
     activity_year,
-    polylines
+    polylines,
+    to_json(polylines) as polylines_json
 from aggregated
