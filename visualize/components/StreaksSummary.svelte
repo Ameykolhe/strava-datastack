@@ -15,14 +15,14 @@
     data={data}
     value="active_days_year"
     title="Active Days (year)"
-    fmt="#,#0"
+    fmt="#,##0"
   />
 
   <BigValue
     data={data}
     value="longest_streak"
     title="Longest Streak (days)"
-    fmt="#,#0"
+    fmt="#,##0"
   />
 {:else}
   <div class="no-data-message">

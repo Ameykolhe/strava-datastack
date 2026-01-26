@@ -111,7 +111,7 @@ where activity_year = ${params.year}
     comparisonFmt=pct1
     comparisonTitle="YoY"
     title="Total Activities"
-    fmt="#,#0"
+    fmt="#,##0"
 />
 
 <BigValue
@@ -121,7 +121,7 @@ where activity_year = ${params.year}
     comparisonFmt=pct1
     comparisonTitle="YoY"
     title={distanceTotalTitle}
-    fmt="#,#0.0"
+    fmt="#,##0.0"
 />
 
 <BigValue
@@ -131,7 +131,7 @@ where activity_year = ${params.year}
     comparisonFmt=pct1
     comparisonTitle="YoY"
     title="Total Time (hrs)"
-    fmt="#,#0"
+    fmt="#,##0"
 />
 
 <BigValue
@@ -141,7 +141,7 @@ where activity_year = ${params.year}
     comparisonFmt=pct1
     comparisonTitle="YoY"
     title="Elevation Gain (ft)"
-    fmt="#,#0"
+    fmt="#,##0"
 />
 
 ## Streaks

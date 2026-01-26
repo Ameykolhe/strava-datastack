@@ -94,7 +94,7 @@ order by zone_id
     data={q_activity_detail__activity}
     value=distance_miles
     title="Distance (mi)"
-    fmt='#,##0.2'
+    fmt='#,##0.00'
 />
 
 <BigValue
@@ -114,7 +114,7 @@ order by zone_id
     data={q_activity_detail__activity}
     value=average_speed_mph
     title="Avg Speed (mph)"
-    fmt='#,##0.1'
+    fmt='#,##0.0'
 />
 
 {#if q_activity_detail__activity[0].average_heartrate_bpm != null}

@@ -92,35 +92,35 @@ limit 20
     data={q_activity__kpis_alltime}
     value=activity_count
     title="Total Activities"
-    fmt="#,#0"
+    fmt="#,##0"
 />
 
 <BigValue
     data={q_activity__kpis_alltime}
     value={distanceTotalField}
     title={distanceTotalTitle}
-    fmt="#,#0.0"
+    fmt="#,##0.0"
 />
 
 <BigValue
     data={q_activity__kpis_alltime}
     value=total_moving_time_hours
     title="Total Time (hrs)"
-    fmt="#,#0"
+    fmt="#,##0"
 />
 
 <BigValue
     data={q_activity__kpis_alltime}
     value=total_elevation_gain_feet
     title="Elevation Gain (ft)"
-    fmt="#,#0"
+    fmt="#,##0"
 />
 
 <BigValue
     data={q_activity__kpis_alltime}
     value=avg_speed_mph
     title="Avg Speed (mph)"
-    fmt="#,#0.0"
+    fmt="#,##0.0"
 />
 
 ## Streaks
@@ -129,21 +129,21 @@ limit 20
     data={q_activity__streaks_alltime}
     value=current_streak
     title="Current Streak (days)"
-    fmt="#,#0"
+    fmt="#,##0"
 />
 
 <BigValue
     data={q_activity__streaks_alltime}
     value=longest_streak
     title="Longest Streak (days)"
-    fmt="#,#0"
+    fmt="#,##0"
 />
 
 <BigValue
     data={q_activity__streaks_alltime}
     value=active_days_last_30
     title="Active Days (last 30)"
-    fmt="#,#0"
+    fmt="#,##0"
 />
 
 ## Monthly Trends

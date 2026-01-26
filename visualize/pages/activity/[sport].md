@@ -92,14 +92,14 @@ order by started_at desc
     data={q_activity_sport__kpis}
     value=activity_count
     title="Total Activities"
-    fmt="#,#0"
+    fmt="#,##0"
 />
 
 <BigValue
     data={q_activity_sport__kpis}
     value=total_moving_time_hours
     title="Total Time (hrs)"
-    fmt="#,#0.0"
+    fmt="#,##0.0"
 />
 
 {#if distanceSupported}
@@ -107,7 +107,7 @@ order by started_at desc
     data={q_activity_sport__kpis}
     value={distanceTotalField}
     title={distanceTotalTitle}
-    fmt="#,#0.0"
+    fmt="#,##0.0"
 />
 {/if}
 
@@ -116,7 +116,7 @@ order by started_at desc
     data={q_activity_sport__kpis}
     value=total_elevation_gain_feet
     title="Elevation Gain (ft)"
-    fmt="#,#0"
+    fmt="#,##0"
 />
 {/if}
 
@@ -125,7 +125,7 @@ order by started_at desc
     data={q_activity_sport__kpis}
     value=avg_speed_kmh
     title="Avg Speed (km/h)"
-    fmt="#,#0.0"
+    fmt="#,##0.0"
 />
 {/if}
 
@@ -134,7 +134,7 @@ order by started_at desc
     data={q_activity_sport__kpis}
     value=avg_pace_min_per_km
     title="Avg Pace (min/km)"
-    fmt="#,#0.00"
+    fmt="#,##0.00"
 />
 {/if}
 
@@ -143,7 +143,7 @@ order by started_at desc
     data={q_activity_sport__kpis}
     value=avg_heartrate_bpm
     title="Avg HR (bpm)"
-    fmt="#,#0"
+    fmt="#,##0"
 />
 {/if}
 

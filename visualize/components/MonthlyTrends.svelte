@@ -133,13 +133,13 @@
 {#if selectedWithComparisons}
 <div class="monthly-kpis">
   {#if distanceSupported}
-  <BigValue data={[selectedWithComparisons]} value={distanceMonthlyField} comparison="distance_change" comparisonFmt="pct1" comparisonTitle="MoM" title={distanceMonthlyTitle} fmt="#,#0.0"/>
+  <BigValue data={[selectedWithComparisons]} value={distanceMonthlyField} comparison="distance_change" comparisonFmt="pct1" comparisonTitle="MoM" title={distanceMonthlyTitle} fmt="#,##0.0"/>
   {/if}
-  <BigValue data={[selectedWithComparisons]} value="total_moving_time_hours" comparison="time_change" comparisonFmt="pct1" comparisonTitle="MoM" title="Time (hrs)" fmt="#,#0.0"/>
+  <BigValue data={[selectedWithComparisons]} value="total_moving_time_hours" comparison="time_change" comparisonFmt="pct1" comparisonTitle="MoM" title="Time (hrs)" fmt="#,##0.0"/>
   {#if elevationSupported}
-  <BigValue data={[selectedWithComparisons]} value="total_elevation_gain_feet" comparison="elevation_change" comparisonFmt="pct1" comparisonTitle="MoM" title="Elevation (ft)" fmt="#,#0"/>
+  <BigValue data={[selectedWithComparisons]} value="total_elevation_gain_feet" comparison="elevation_change" comparisonFmt="pct1" comparisonTitle="MoM" title="Elevation (ft)" fmt="#,##0"/>
   {/if}
-  <BigValue data={[selectedWithComparisons]} value="activity_count" comparison="count_change" comparisonFmt="pct1" comparisonTitle="MoM" title="Activity Count" fmt="#,#0"/>
+  <BigValue data={[selectedWithComparisons]} value="activity_count" comparison="count_change" comparisonFmt="pct1" comparisonTitle="MoM" title="Activity Count" fmt="#,##0"/>
 </div>
 {/if}
 

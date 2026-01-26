@@ -124,7 +124,7 @@ order by started_at desc
     comparisonFmt=pct1
     comparisonTitle="YoY"
     title="Total Activities"
-    fmt="#,#0"
+    fmt="#,##0"
 />
 
 <BigValue
@@ -134,7 +134,7 @@ order by started_at desc
     comparisonFmt=pct1
     comparisonTitle="YoY"
     title="Total Time (hrs)"
-    fmt="#,#0.0"
+    fmt="#,##0.0"
 />
 
 {#if distanceSupported}
@@ -145,7 +145,7 @@ order by started_at desc
     comparisonFmt=pct1
     comparisonTitle="YoY"
     title={distanceTotalTitle}
-    fmt="#,#0.0"
+    fmt="#,##0.0"
 />
 {/if}
 
@@ -157,7 +157,7 @@ order by started_at desc
     comparisonFmt=pct1
     comparisonTitle="YoY"
     title="Elevation Gain (ft)"
-    fmt="#,#0"
+    fmt="#,##0"
 />
 {/if}
 
@@ -169,7 +169,7 @@ order by started_at desc
     comparisonFmt=pct1
     comparisonTitle="YoY"
     title="Avg Speed (km/h)"
-    fmt="#,#0.0"
+    fmt="#,##0.0"
 />
 {/if}
 
@@ -181,7 +181,7 @@ order by started_at desc
     comparisonFmt=pct1
     comparisonTitle="YoY"
     title="Avg Pace (min/km)"
-    fmt="#,#0.00"
+    fmt="#,##0.00"
 />
 {/if}
 
@@ -193,7 +193,7 @@ order by started_at desc
     comparisonFmt=pct1
     comparisonTitle="YoY"
     title="Avg HR (bpm)"
-    fmt="#,#0"
+    fmt="#,##0"
 />
 {/if}
 
