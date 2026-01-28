@@ -1,3 +1,8 @@
+# Build configuration for optimization
+[build]
+  publish = "build"
+  command = "npm run sources && npm run build"
+
 # Asset optimization
 [build.processing]
   skip_processing = false
@@ -56,6 +61,12 @@
   for = "/branding/*"
   [headers.values]
     Cache-Control = "public, max-age=86400"
+
+# Static data files (parquet, schema.json) - cache aggressively
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
 
 [[redirects]]
 from = "/*"

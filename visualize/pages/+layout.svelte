@@ -6,9 +6,9 @@
 
 	export let data;
 
-	// Register service worker for offline caching
+	// Register service worker for offline caching (only in production)
 	onMount(() => {
-		if ('serviceWorker' in navigator) {
+		if ('serviceWorker' in navigator && import.meta.env.PROD) {
 			navigator.serviceWorker.register('/sw.js', { scope: '/' })
 				.then((registration) => {
 					console.log('Service Worker registered:', registration.scope);
@@ -33,9 +33,6 @@
 
   <!-- Preload critical API endpoints -->
   <link rel="preload" href="/api/pagesManifest.json" as="fetch" crossorigin />
-
-  <!-- Preload critical fonts to prevent FOUT -->
-  <link rel="preload" as="style" href="/@evidence-dev/tailwind/fonts.css" />
 </svelte:head>
 
 <CustomLayout

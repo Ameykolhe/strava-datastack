@@ -120,6 +120,108 @@ models:
       - name: activity_link
         description: Evidence route link for the activity
 
+  - name: rpt_activity_detail__activity
+    description: |
+      Reporting model for activity detail pages.
+      Provides all fields needed for individual activity view.
+      Grain: One row per activity.
+    columns:
+      - name: activity_id
+        description: Activity ID (primary key)
+        tests:
+          - unique
+          - not_null
+      - name: activity_name
+        description: Activity name
+      - name: sport_type
+        description: Sport type classification
+      - name: sport_slug
+        description: Lowercase sport slug for routing
+      - name: workout_type
+        description: Workout type classification
+      - name: started_at
+        description: Activity start timestamp (UTC)
+      - name: started_at_local
+        description: Activity start timestamp (local time)
+      - name: timezone
+        description: Timezone identifier
+      - name: location_city
+        description: Activity location city
+      - name: location_state
+        description: Activity location state
+      - name: location_country
+        description: Activity location country
+      - name: distance_meters
+        description: Distance in meters
+      - name: distance_km
+        description: Distance in kilometers
+      - name: distance_miles
+        description: Distance in miles
+      - name: elevation_gain_meters
+        description: Elevation gain in meters
+      - name: elevation_gain_feet
+        description: Elevation gain in feet
+      - name: moving_time_seconds
+        description: Moving time in seconds
+      - name: elapsed_time_seconds
+        description: Elapsed time in seconds
+      - name: average_speed_kph
+        description: Average speed in kilometers per hour
+      - name: average_speed_mph
+        description: Average speed in miles per hour
+      - name: max_speed_kph
+        description: Max speed in kilometers per hour
+      - name: max_speed_mph
+        description: Max speed in miles per hour
+      - name: pace_min_per_km
+        description: Average pace in minutes per kilometer
+      - name: pace_min_per_mile
+        description: Average pace in minutes per mile
+      - name: has_heartrate
+        description: Flag indicating if activity has heart rate data
+      - name: average_heartrate_bpm
+        description: Average heart rate in bpm
+      - name: max_heartrate_bpm
+        description: Max heart rate in bpm
+      - name: has_power_meter
+        description: Flag indicating if activity has power meter data
+      - name: average_watts
+        description: Average power in watts
+      - name: kilojoules
+        description: Energy expenditure in kilojoules
+      - name: calories_burned
+        description: Energy expenditure in calories (derived from kilojoules)
+      - name: polyline
+        description: Encoded map polyline
+      - name: start_latitude
+        description: Start point latitude
+      - name: start_longitude
+        description: Start point longitude
+      - name: kudos_count
+        description: Kudos count
+      - name: comment_count
+        description: Comment count
+      - name: achievement_count
+        description: Achievement count
+      - name: pr_count
+        description: PR count
+      - name: suffer_score
+        description: Strava suffer score
+      - name: is_trainer
+        description: Flag indicating if activity was on a trainer
+      - name: is_commute
+        description: Flag indicating if activity was a commute
+      - name: is_manual
+        description: Flag indicating if activity was manually entered
+      - name: is_private
+        description: Flag indicating if activity is private
+      - name: visibility
+        description: Activity visibility setting
+      - name: device_name
+        description: Recording device name
+      - name: activity_link
+        description: Evidence route link for the activity
+
   - name: rpt_activity_hr_zones__activity_zone
     description: |
       Reporting model for heart rate zone distributions.

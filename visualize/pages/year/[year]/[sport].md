@@ -5,6 +5,7 @@ sidebar_link: false
 
 <script>
   import ActivityCalendar from '../../../../components/activity/ActivityCalendar.svelte';
+  import ActivitiesDataTable from '../../../../components/activity/ActivitiesDataTable.svelte';
   import MonthlyTrends from '../../../../components/charts/MonthlyTrends.svelte';
   import StreaksSummary from '../../../../components/charts/StreaksSummary.svelte';
   import { distanceUnitStore } from '../../../../components/utils/distanceUnit.js';
@@ -220,26 +221,13 @@ order by started_at desc
 
 ## All Activities
 
-<DataTable data={activitiesDisplay} link=activity_link>
-    <Column id=started_at title="Date"/>
-    <Column id=activity_name title="Activity"/>
-    {#if distanceSupported}
-    <Column id=distance_display title={`Distance (${distanceUnitLabel})`}/>
-    {/if}
-    <Column id=moving_time_minutes title="Duration (min)"/>
-    {#if elevationSupported}
-    <Column id=elevation_gain_feet title="Elevation (ft)"/>
-    {/if}
-    {#if hasSpeed}
-    <Column id=average_speed_kph title="Avg Speed (km/h)"/>
-    {/if}
-    {#if hasPace}
-    <Column id=pace_min_per_km title="Pace (min/km)"/>
-    {/if}
-    {#if hasHeartRate}
-    <Column id=average_heartrate_bpm title="Avg HR"/>
-    {/if}
-    {#if hasWatts}
-    <Column id=average_watts title="Avg Watts"/>
-    {/if}
-</DataTable>
+<ActivitiesDataTable
+  activitiesDisplay={activitiesDisplay}
+  distanceSupported={distanceSupported}
+  elevationSupported={elevationSupported}
+  hasSpeed={hasSpeed}
+  hasPace={hasPace}
+  hasHeartRate={hasHeartRate}
+  hasWatts={hasWatts}
+  distanceUnitLabel={distanceUnitLabel}
+/>
