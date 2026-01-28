@@ -1,10 +1,10 @@
 <!--
   Sidebar With Toggle
-  Evidence sidebar wrapper that includes a Strava badge and distance unit toggle.
-  Uses Evidence.dev default styling for proper mobile scrolling.
+  Custom sidebar wrapper with slots for Strava badge and distance unit toggle.
+  Provides proper mobile scrolling with custom content at bottom of sidebar.
 -->
 <script>
-	import { Sidebar } from '@evidence-dev/core-components';
+	import CustomSidebar from './CustomSidebar.svelte';
 	import DistanceUnitToggle from '../shared/DistanceUnitToggle.svelte';
 	import StravaBadge from '../shared/StravaBadge.svelte';
 
@@ -20,7 +20,7 @@
 	export let mobileSidebarOpen = false;
 </script>
 
-<Sidebar
+<CustomSidebar
 	{fileTree}
 	bind:mobileSidebarOpen
 	{title}
@@ -31,8 +31,12 @@
 	{sidebarFrontMatter}
 	{sidebarDepth}
 >
-	<div slot="below-nav" class="px-4 py-4 space-y-4">
+	<div slot="mobile-bottom" class="space-y-4 text-center">
 		<StravaBadge athleteId="2398447" />
 		<DistanceUnitToggle />
 	</div>
-</Sidebar>
+	<div slot="desktop-bottom" class="space-y-4 text-center">
+		<StravaBadge athleteId="2398447" />
+		<DistanceUnitToggle />
+	</div>
+</CustomSidebar>
