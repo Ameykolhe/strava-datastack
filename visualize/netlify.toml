@@ -1,0 +1,68 @@
+# Build configuration for optimization
+[build]
+  publish = ".svelte-kit/output/client"
+  command = "npm run build"
+
+# Asset optimization
+[build.processing]
+  skip_processing = false
+
+[build.processing.css]
+  bundle = true
+  minify = true
+
+[build.processing.js]
+  bundle = true
+  minify = true
+
+[build.processing.html]
+  pretty_urls = true
+
+[build.processing.images]
+  compress = true
+
+# Immutable assets with hashed filenames - cache aggressively
+[[headers]]
+  for = "/_app/immutable/*"
+  [headers.values]
+    Cache-Control = "public, immutable, max-age=31536000"
+
+# JavaScript and CSS bundles
+[[headers]]
+  for = "/_app/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/_app/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Prerendered query data - cache with stale-while-revalidate
+[[headers]]
+  for = "/api/prerendered_queries/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, stale-while-revalidate=86400"
+
+# API manifests - short cache with revalidation
+[[headers]]
+  for = "/api/*.json"
+  [headers.values]
+    Cache-Control = "public, max-age=300, stale-while-revalidate=3600"
+
+# HTML - always revalidate
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Static branding assets
+[[headers]]
+  for = "/branding/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200

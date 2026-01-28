@@ -4,7 +4,7 @@ sidebar_link: false
 ---
 
 <script>
-  import MonthlyTrends from '../../../components/MonthlyTrends.svelte';
+  import MonthlyTrends from '../../../components/charts/MonthlyTrends.svelte';
   import { distanceUnitStore } from '../../../components/utils/distanceUnit.js';
   import { getActivitySportState } from '../../../components/scripts/activitySport.js';
 

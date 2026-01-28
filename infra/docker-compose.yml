@@ -1,0 +1,11 @@
+name: strava-datastack
+
+include:
+  - path: ./airflow/docker-compose.yml
+  - path: ./observability/docker-compose.yml
+  - path: ./lineage/docker-compose.yml
+  - path: ./strava-infra/docker-compose.yml
+
+networks:
+  strava-infra:
+    name: strava-infra

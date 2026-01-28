@@ -3,7 +3,11 @@ title: Activity Details
 ---
 
 <script>
-  import ActivityRouteMap from '../../../../components/ActivityRouteMap.svelte';
+  import ActivityRouteMap from '../../../../components/activity/ActivityRouteMap.svelte';
+  import ActivityDetailsTable from '../../../../components/activity/detail/ActivityDetailsTable.svelte';
+  import ActivityHeartRateTable from '../../../../components/activity/detail/ActivityHeartRateTable.svelte';
+  import ActivityPowerTable from '../../../../components/activity/detail/ActivityPowerTable.svelte';
+  import ActivityStravaStatsTable from '../../../../components/activity/detail/ActivityStravaStatsTable.svelte';
 </script>
 
 ```sql q_activity_detail__activity
@@ -148,25 +152,13 @@ order by zone_id
 
 ## Details
 
-| Metric         | Value                                                            |
-|----------------|------------------------------------------------------------------|
-| Sport Type     | {q_activity_detail__activity[0].sport_type}                                  |
-| Workout Type   | {q_activity_detail__activity[0].workout_type ?? 'N/A'}                       |
-| Elapsed Time   | {q_activity_detail__activity[0].elapsed_time_seconds} seconds                |
-| Moving Time    | {q_activity_detail__activity[0].moving_time_seconds} seconds                 |
-| Distance       | {q_activity_detail__activity[0].distance_miles?.toFixed(2) ?? 'N/A'} mi      |
-| Elevation Gain | {q_activity_detail__activity[0].elevation_gain_feet?.toFixed(0) ?? 'N/A'} ft |
-| Avg Speed      | {q_activity_detail__activity[0].average_speed_mph?.toFixed(1) ?? 'N/A'} mph  |
-| Max Speed      | {q_activity_detail__activity[0].max_speed_mph?.toFixed(1) ?? 'N/A'} mph      |
+<ActivityDetailsTable activityData={q_activity_detail__activity} />
 
 {#if q_activity_detail__activity[0].average_heartrate_bpm != null}
 
 ### Heart Rate
 
-| Metric | Value                                                               |
-|--------|---------------------------------------------------------------------|
-| Avg HR | {q_activity_detail__activity[0].average_heartrate_bpm?.toFixed(0) ?? 'N/A'} bpm |
-| Max HR | {q_activity_detail__activity[0].max_heartrate_bpm?.toFixed(0) ?? 'N/A'} bpm     |
+<ActivityHeartRateTable activityData={q_activity_detail__activity} />
 
 {/if}
 
@@ -174,10 +166,8 @@ order by zone_id
 
 ### Power
 
-| Metric    | Value                                                     |
-|-----------|-----------------------------------------------------------|
-| Avg Power | {q_activity_detail__activity[0].average_watts?.toFixed(0) ?? 'N/A'} W |
-| Energy    | {q_activity_detail__activity[0].kilojoules?.toFixed(0) ?? 'N/A'} kJ   |
+<ActivityPowerTable activityData={q_activity_detail__activity} />
+
 {/if}
 
 {#if q_activity_detail__hr_zones.length > 0 || q_activity_detail__power_zones.length > 0 || q_activity_detail__pace_zones.length > 0}
@@ -316,13 +306,7 @@ order by zone_id
 
 ### Strava Stats
 
-| Metric       | Value                                      |
-|--------------|--------------------------------------------|
-| Kudos        | {q_activity_detail__activity[0].kudos_count}           |
-| Comments     | {q_activity_detail__activity[0].comment_count}         |
-| Achievements | {q_activity_detail__activity[0].achievement_count}     |
-| PRs          | {q_activity_detail__activity[0].pr_count}              |
-| Suffer Score | {q_activity_detail__activity[0].suffer_score ?? 'N/A'} |
+<ActivityStravaStatsTable activityData={q_activity_detail__activity} />
 
 {:else}
 

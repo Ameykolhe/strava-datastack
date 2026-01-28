@@ -4,9 +4,9 @@ sidebar_link: false
 ---
 
 <script>
-  import ActivityCalendar from '../../../../components/ActivityCalendar.svelte';
-  import MonthlyTrends from '../../../../components/MonthlyTrends.svelte';
-  import StreaksSummary from '../../../../components/StreaksSummary.svelte';
+  import ActivityCalendar from '../../../../components/activity/ActivityCalendar.svelte';
+  import MonthlyTrends from '../../../../components/charts/MonthlyTrends.svelte';
+  import StreaksSummary from '../../../../components/charts/StreaksSummary.svelte';
   import { distanceUnitStore } from '../../../../components/utils/distanceUnit.js';
   import { getYearSportState } from '../../../../components/scripts/yearSport.js';
 
