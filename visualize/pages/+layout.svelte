@@ -1,7 +1,7 @@
 <script>
 	import '@evidence-dev/tailwind/fonts.css';
 	import '../app.css';
-	import CustomLayout from '../components/CustomLayout.svelte';
+	import CustomLayout from '../components/layout/CustomLayout.svelte';
 	export let data;
 </script>
 

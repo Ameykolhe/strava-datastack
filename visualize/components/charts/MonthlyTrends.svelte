@@ -25,7 +25,7 @@
 -->
 <script>
   import { BigValue, ECharts } from '@evidence-dev/core-components';
-  import { pctChange } from './lib/math.js';
+  import { pctChange } from '../lib/math.js';
 
   export let data = [];
   export let distanceSupported = true;

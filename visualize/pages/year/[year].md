@@ -4,11 +4,11 @@ sidebar_link: false
 ---
 
 <script>
-  import ActivityCalendar from '../../../components/ActivityCalendar.svelte';
-  import ActivityHeatmap from '../../../components/ActivityHeatmap.svelte';
-  import MonthlyTrends from '../../../components/MonthlyTrends.svelte';
-  import SportSummaryCharts from '../../../components/SportSummaryCharts.svelte';
-  import StreaksSummary from '../../../components/StreaksSummary.svelte';
+  import ActivityCalendar from '../../../components/activity/ActivityCalendar.svelte';
+  import ActivityHeatmap from '../../../components/activity/ActivityHeatmap.svelte';
+  import MonthlyTrends from '../../../components/charts/MonthlyTrends.svelte';
+  import SportSummaryCharts from '../../../components/charts/SportSummaryCharts.svelte';
+  import StreaksSummary from '../../../components/charts/StreaksSummary.svelte';
   import { distanceUnitStore } from '../../../components/utils/distanceUnit.js';
   import { getYearState, createYearSportPieClickHandler } from '../../../components/scripts/year.js';
 

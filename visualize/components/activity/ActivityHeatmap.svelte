@@ -8,8 +8,8 @@
 -->
 <script>
   import { onMount, onDestroy } from "svelte";
-  import { decodePolyline } from "./lib/polyline.js";
-  import { isDarkMode, getTileUrl } from "./lib/mapUtils.js";
+  import { decodePolyline } from "../lib/polyline.js";
+  import { isDarkMode, getTileUrl } from "../lib/mapUtils.js";
 
   // Props
   export let polylines = [];

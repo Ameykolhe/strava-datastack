@@ -3,8 +3,8 @@ title: Activities
 ---
 
 <script>
-  import MonthlyTrends from '../../components/MonthlyTrends.svelte';
-  import SportSummaryCharts from '../../components/SportSummaryCharts.svelte';
+  import MonthlyTrends from '../../components/charts/MonthlyTrends.svelte';
+  import SportSummaryCharts from '../../components/charts/SportSummaryCharts.svelte';
   import { distanceUnitStore } from '../../components/utils/distanceUnit.js';
   import { getActivityIndexState, handleSportPieClick } from '../../components/scripts/activityIndex.js';
 
