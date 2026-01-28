@@ -1,8 +1,3 @@
-# Build configuration for optimization
-[build]
-  publish = "build"
-  command = "npm run build"
-
 # Asset optimization
 [build.processing]
   skip_processing = false
