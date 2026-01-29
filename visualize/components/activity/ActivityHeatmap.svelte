@@ -7,9 +7,9 @@
   @prop {number} height - Map height in pixels (default: 500)
 -->
 <script>
-  import { onMount, onDestroy } from "svelte";
-  import { decodePolyline } from "../lib/polyline.js";
-  import { isDarkMode, getTileUrl } from "../lib/mapUtils.js";
+  import {onMount, onDestroy} from "svelte";
+  import {decodePolyline} from "../lib/polyline.js";
+  import {isDarkMode, getTileUrl} from "../lib/mapUtils.js";
 
   // Props
   export let polylines = [];
@@ -77,17 +77,17 @@
           if (coords.length > 0) {
             // Calculate this activity's centroid
             const activityCentroid = coords.reduce(
-              (acc, coord) => {
-                acc.lat += coord[0];
-                acc.lng += coord[1];
-                return acc;
-              },
-              { lat: 0, lng: 0 }
+                (acc, coord) => {
+                  acc.lat += coord[0];
+                  acc.lng += coord[1];
+                  return acc;
+                },
+                {lat: 0, lng: 0}
             );
             activityCentroid.lat /= coords.length;
             activityCentroid.lng /= coords.length;
 
-            activities.push({ coords, centroid: activityCentroid });
+            activities.push({coords, centroid: activityCentroid});
           }
         }
       }
@@ -195,17 +195,18 @@
 
 <svelte:head>
   <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    crossorigin=""
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      crossorigin=""
   />
 </svelte:head>
 
 {#if polylines && polylines.length > 0}
   <div class="heatmap-container">
-    <div class="activity-heatmap" bind:this={mapEl} style="height: {height}px;" />
+    <div class="activity-heatmap" bind:this={mapEl} style="height: {height}px;"/>
     <button class="reset-btn" on:click={resetMap} title="Reset to initial view">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
         <path d="M3 3v5h5"/>
       </svg>

@@ -6,9 +6,9 @@ hide_title: true
 <script>
   import ActivityHeader from '../../../../components/activity/detail/ActivityHeader.svelte';
   import CoreMetricsGrid from '../../../../components/activity/detail/CoreMetricsGrid.svelte';
-  import ActivityDetailsGrouped from '../../../../components/activity/detail/ActivityDetailsGrouped.svelte';
+  import EngagementStats from '../../../../components/activity/detail/EngagementStats.svelte';
   import ActivityRouteMap from '../../../../components/activity/ActivityRouteMap.svelte';
-  import ZoneDistributionSection from '../../../../components/activity/detail/ZoneDistributionSection.svelte';
+  import ZoneDistribution from '../../../../components/activity/detail/ZoneDistribution.svelte';
   import { distanceUnitStore } from '../../../../components/utils/distanceUnit.js';
 
   let distanceUnit = 'km';
@@ -45,12 +45,9 @@ order by zone_id
 
 <ActivityHeader
   activityName={q_activity_detail__activity[0].activity_name}
-  sportType={q_activity_detail__activity[0].sport_type}
-  startedAtLocal={q_activity_detail__activity[0].started_at_local}
+  startedAt={q_activity_detail__activity[0].started_at}
   timezone={q_activity_detail__activity[0].timezone}
-  locationCity={q_activity_detail__activity[0].location_city}
-  locationState={q_activity_detail__activity[0].location_state}
-  locationCountry={q_activity_detail__activity[0].location_country}
+  deviceName={q_activity_detail__activity[0].device_name}
 />
 
 {/if}
@@ -94,9 +91,8 @@ The activity with ID **{params.activity_id}** was not found.
 
 {#if q_activity_detail__activity.length > 0}
 
-<ActivityDetailsGrouped
+<EngagementStats
   activity={q_activity_detail__activity[0]}
-  speedUnit={speedUnit}
 />
 
 {/if}
@@ -105,19 +101,19 @@ The activity with ID **{params.activity_id}** was not found.
 
 {#if q_activity_detail__hr_zones.length > 0 || q_activity_detail__power_zones.length > 0 || q_activity_detail__pace_zones.length > 0}
 
-<ZoneDistributionSection
+<ZoneDistribution
   zoneData={q_activity_detail__hr_zones}
   zoneType="hr"
   title="Heart Rate Zones"
 />
 
-<ZoneDistributionSection
+<ZoneDistribution
   zoneData={q_activity_detail__power_zones}
   zoneType="power"
   title="Power Zones"
 />
 
-<ZoneDistributionSection
+<ZoneDistribution
   zoneData={q_activity_detail__pace_zones}
   zoneType="pace"
   title="Pace Zones"

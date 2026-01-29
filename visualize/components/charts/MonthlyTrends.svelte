@@ -24,8 +24,8 @@
   @prop {number} minChartPoints - Minimum data points to show chart
 -->
 <script>
-  import { BigValue, ECharts } from '@evidence-dev/core-components';
-  import { pctChange } from '../lib/math.js';
+  import {BigValue, ECharts} from '@evidence-dev/core-components';
+  import {pctChange} from '../lib/math.js';
 
   export let data = [];
   export let distanceSupported = true;
@@ -61,7 +61,7 @@
   $: currentMonth = data?.[data.length - 1]?.month_label;
   $: if (!selectedMonth && currentMonth) selectedMonth = currentMonth;
   $: selectedRow = data?.find((row) => row.month_label === selectedMonth) ??
-    (data?.length ? data[data.length - 1] : null);
+      (data?.length ? data[data.length - 1] : null);
   $: selectedIndex = data?.findIndex((row) => row.month_label === selectedRow?.month_label) ?? -1;
   $: prevRow = selectedIndex > 0 ? data[selectedIndex - 1] : null;
 
@@ -70,7 +70,7 @@
     if (!value) return '';
     const date = typeof value === 'string' ? new Date(value) : value;
     if (!date || Number.isNaN(date.getTime?.())) return '';
-    return date.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    return date.toLocaleString('en-US', {month: 'long', year: 'numeric'});
   };
 
   $: selectedWithComparisons = selectedRow ? {
@@ -127,29 +127,33 @@
 </script>
 
 {#if selectedMonthTitle}
-<h3>{selectedMonthTitle}</h3>
+  <h3>{selectedMonthTitle}</h3>
 {/if}
 
 {#if selectedWithComparisons}
-<div class="monthly-kpis">
-  {#if distanceSupported}
-  <BigValue data={[selectedWithComparisons]} value={distanceMonthlyField} comparison="distance_change" comparisonFmt="pct1" comparisonTitle="MoM" title={distanceMonthlyTitle} fmt="#,##0.0"/>
-  {/if}
-  <BigValue data={[selectedWithComparisons]} value="total_moving_time_hours" comparison="time_change" comparisonFmt="pct1" comparisonTitle="MoM" title="Time (hrs)" fmt="#,##0.0"/>
-  {#if elevationSupported}
-  <BigValue data={[selectedWithComparisons]} value="total_elevation_gain_feet" comparison="elevation_change" comparisonFmt="pct1" comparisonTitle="MoM" title="Elevation (ft)" fmt="#,##0"/>
-  {/if}
-  <BigValue data={[selectedWithComparisons]} value="activity_count" comparison="count_change" comparisonFmt="pct1" comparisonTitle="MoM" title="Activity Count" fmt="#,##0"/>
-</div>
+  <div class="monthly-kpis">
+    {#if distanceSupported}
+      <BigValue data={[selectedWithComparisons]} value={distanceMonthlyField} comparison="distance_change"
+                comparisonFmt="pct1" comparisonTitle="MoM" title={distanceMonthlyTitle} fmt="#,##0.0"/>
+    {/if}
+    <BigValue data={[selectedWithComparisons]} value="total_moving_time_hours" comparison="time_change"
+              comparisonFmt="pct1" comparisonTitle="MoM" title="Time (hrs)" fmt="#,##0.0"/>
+    {#if elevationSupported}
+      <BigValue data={[selectedWithComparisons]} value="total_elevation_gain_feet" comparison="elevation_change"
+                comparisonFmt="pct1" comparisonTitle="MoM" title="Elevation (ft)" fmt="#,##0"/>
+    {/if}
+    <BigValue data={[selectedWithComparisons]} value="activity_count" comparison="count_change" comparisonFmt="pct1"
+              comparisonTitle="MoM" title="Activity Count" fmt="#,##0"/>
+  </div>
 {/if}
 
 {#if hasChartData}
-<ECharts
-  on:click={handleMonthlyEvent}
-  on:mouseover={handleMonthlyEvent}
-  data={data}
-  showAllXAxisLabels
-  config={{
+  <ECharts
+      on:click={handleMonthlyEvent}
+      on:mouseover={handleMonthlyEvent}
+      data={data}
+      showAllXAxisLabels
+      config={{
     backgroundColor: 'transparent',
     legend: {
       top: 0,
@@ -238,5 +242,5 @@
       }
     ]
   }}
-/>
+  />
 {/if}
