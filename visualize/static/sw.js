@@ -63,6 +63,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Cache-first for static data files (parquet, schema.json)
+  if (request.url.includes('/data/')) {
+    event.respondWith(
+      caches.match(request).then((response) => {
+        return response || fetch(request).then((response) => {
+          return caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, response.clone());
+            return response;
+          });
+        });
+      })
+    );
+    return;
+  }
+
   // Network-first for API data (with fallback to cache)
   if (request.url.includes('/api/')) {
     event.respondWith(

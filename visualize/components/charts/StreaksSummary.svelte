@@ -5,24 +5,24 @@
   @prop {Array<{active_days_year: number, longest_streak: number}>} data - Streaks data
 -->
 <script>
-  import { BigValue } from '@evidence-dev/core-components';
+  import {BigValue} from '@evidence-dev/core-components';
 
   export let data = [];
 </script>
 
 {#if data && data.length > 0}
   <BigValue
-    data={data}
-    value="active_days_year"
-    title="Active Days (year)"
-    fmt="#,##0"
+      data={data}
+      value="active_days_year"
+      title="Active Days (year)"
+      fmt="#,##0"
   />
 
   <BigValue
-    data={data}
-    value="longest_streak"
-    title="Longest Streak (days)"
-    fmt="#,##0"
+      data={data}
+      value="longest_streak"
+      title="Longest Streak (days)"
+      fmt="#,##0"
   />
 {:else}
   <div class="no-data-message">

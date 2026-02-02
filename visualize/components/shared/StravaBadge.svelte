@@ -10,16 +10,16 @@
 
 <div class="strava-badge-container">
   <a
-    class="strava-badge"
-    href="https://strava.com/athletes/{athleteId}"
-    target="_blank"
-    rel="noopener noreferrer"
+      class="strava-badge"
+      href="https://strava.com/athletes/{athleteId}"
+      target="_blank"
+      rel="noopener noreferrer"
   >
     Follow me on
     <img
-      src="https://badges.strava.com/logo-strava.png"
-      alt="Strava"
-      class="strava-logo"
+        src="https://badges.strava.com/logo-strava.png"
+        alt="Strava"
+        class="strava-logo"
     />
   </a>
 </div>

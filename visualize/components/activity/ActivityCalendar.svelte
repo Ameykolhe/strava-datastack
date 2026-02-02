@@ -5,19 +5,19 @@
   @prop {Array<{activity_date: string, activity_count: number}>} data - Daily activity counts
 -->
 <script>
-  import { CalendarHeatmap } from '@evidence-dev/core-components';
+  import {CalendarHeatmap} from '@evidence-dev/core-components';
 
   export let data = [];
 </script>
 
 {#if data && data.length > 0}
   <CalendarHeatmap
-    data={data}
-    date="activity_date"
-    value="activity_count"
-    min={0}
-    max={5}
-    legend={false}
+      data={data}
+      date="activity_date"
+      value="activity_count"
+      min={0}
+      max={5}
+      legend={false}
   />
 {:else}
   <div class="no-data-message">

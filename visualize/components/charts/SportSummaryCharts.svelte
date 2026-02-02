@@ -6,7 +6,7 @@
   @prop {Function|null} onSliceClick - Optional click handler for pie slices
 -->
 <script>
-  import { ECharts } from '@evidence-dev/core-components';
+  import {ECharts} from '@evidence-dev/core-components';
 
   export let summaryRows = [];
   export let onSliceClick = null;
@@ -35,12 +35,12 @@
    */
   const buildPieOptions = (title, data, showLegend) => ({
     backgroundColor: 'transparent',
-    tooltip: { trigger: 'item' },
+    tooltip: {trigger: 'item'},
     legend: showLegend ? {
       top: 'middle',
       right: 0,
       orient: 'vertical'
-    } : { show: false },
+    } : {show: false},
     title: {
       text: title,
       left: '35%',
@@ -55,9 +55,9 @@
         radius: ['30%', '70%'],
         center: ['35%', '50%'],
         avoidLabelOverlap: false,
-        itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 1 },
-        label: { show: false },
-        labelLine: { show: false },
+        itemStyle: {borderRadius: 6, borderColor: '#fff', borderWidth: 1},
+        label: {show: false},
+        labelLine: {show: false},
         data
       }
     ]
@@ -65,27 +65,27 @@
 </script>
 
 {#if summaryRows.length > 0}
-<div class="sport-summary-charts">
-  {#if activityData.length > 0}
-  <ECharts
-    on:click={handleSliceClick}
-    data={activityData}
-    config={buildPieOptions('Activities', activityData, false)}
-  />
-  {/if}
+  <div class="sport-summary-charts">
+    {#if activityData.length > 0}
+      <ECharts
+          on:click={handleSliceClick}
+          data={activityData}
+          config={buildPieOptions('Activities', activityData, false)}
+      />
+    {/if}
 
-  {#if timeData.length > 0}
-  <ECharts
-    on:click={handleSliceClick}
-    data={timeData}
-    config={buildPieOptions('Time (hrs)', timeData, true)}
-  />
-  {/if}
-</div>
+    {#if timeData.length > 0}
+      <ECharts
+          on:click={handleSliceClick}
+          data={timeData}
+          config={buildPieOptions('Time (hrs)', timeData, true)}
+      />
+    {/if}
+  </div>
 {:else}
-<div class="no-data-message">
-  <p>No sport data available.</p>
-</div>
+  <div class="no-data-message">
+    <p>No sport data available.</p>
+  </div>
 {/if}
 
 <style>

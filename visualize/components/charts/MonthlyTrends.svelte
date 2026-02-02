@@ -15,26 +15,36 @@
   }
 
   @prop {Array} data - Monthly aggregated activity data
-  @prop {boolean} distanceSupported - Whether distance metrics are available
-  @prop {boolean} elevationSupported - Whether elevation metrics are available
-  @prop {string} distanceMonthlyField - Field name for monthly distance (total_distance_km/miles)
-  @prop {string} distanceSeriesField - Field name for chart series distance
-  @prop {string} distanceSeriesName - Display name for distance series
-  @prop {string} distanceMonthlyTitle - Title for distance KPI
-  @prop {number} minChartPoints - Minimum data points to show chart
+  @prop {number} minChartPoints - Minimum data points to show chart (default: 0)
 -->
 <script>
-  import { BigValue, ECharts } from '@evidence-dev/core-components';
-  import { pctChange } from '../lib/math.js';
+  import {BigValue, ECharts} from '@evidence-dev/core-components';
+  import {pctChange} from '../lib/math.js';
+  import {distanceUnitStore} from '../utils/distanceUnit.js';
 
   export let data = [];
-  export let distanceSupported = true;
-  export let elevationSupported = true;
-  export let distanceMonthlyField = 'total_distance_km';
-  export let distanceSeriesField = 'total_distance_km';
-  export let distanceSeriesName = 'Distance (km)';
-  export let distanceMonthlyTitle = 'Distance (km)';
   export let minChartPoints = 0;
+
+  let distanceUnit = 'km';
+  $: distanceUnit = $distanceUnitStore;
+
+  // Compute distance-related fields based on unit preference
+  $: isKm = distanceUnit === 'km';
+  $: distanceMonthlyField = isKm ? 'total_distance_km' : 'total_distance_miles';
+  $: distanceSeriesField = isKm ? 'total_distance_km' : 'total_distance_miles';
+  $: distanceSeriesName = isKm ? 'Distance (km)' : 'Distance (mi)';
+  $: distanceMonthlyTitle = isKm ? 'Distance (km)' : 'Distance (mi)';
+
+  // Auto-detect feature support from data
+  $: distanceSupported = data?.some(row =>
+      row.total_distance_km != null && row.total_distance_km > 0
+  ) ?? false;
+  $: elevationSupported = data?.some(row =>
+      row.total_elevation_gain_feet != null && row.total_elevation_gain_feet > 0
+  ) ?? false;
+
+  // For indoor activities (no distance), default to showing time
+  $: isIndoor = !distanceSupported;
 
   const WINDOW_MONTHS = 12;
 
@@ -61,7 +71,7 @@
   $: currentMonth = data?.[data.length - 1]?.month_label;
   $: if (!selectedMonth && currentMonth) selectedMonth = currentMonth;
   $: selectedRow = data?.find((row) => row.month_label === selectedMonth) ??
-    (data?.length ? data[data.length - 1] : null);
+      (data?.length ? data[data.length - 1] : null);
   $: selectedIndex = data?.findIndex((row) => row.month_label === selectedRow?.month_label) ?? -1;
   $: prevRow = selectedIndex > 0 ? data[selectedIndex - 1] : null;
 
@@ -70,7 +80,7 @@
     if (!value) return '';
     const date = typeof value === 'string' ? new Date(value) : value;
     if (!date || Number.isNaN(date.getTime?.())) return '';
-    return date.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    return date.toLocaleString('en-US', {month: 'long', year: 'numeric'});
   };
 
   $: selectedWithComparisons = selectedRow ? {
@@ -127,33 +137,43 @@
 </script>
 
 {#if selectedMonthTitle}
-<h3>{selectedMonthTitle}</h3>
+  <h3>{selectedMonthTitle}</h3>
 {/if}
 
 {#if selectedWithComparisons}
-<div class="monthly-kpis">
-  {#if distanceSupported}
-  <BigValue data={[selectedWithComparisons]} value={distanceMonthlyField} comparison="distance_change" comparisonFmt="pct1" comparisonTitle="MoM" title={distanceMonthlyTitle} fmt="#,##0.0"/>
-  {/if}
-  <BigValue data={[selectedWithComparisons]} value="total_moving_time_hours" comparison="time_change" comparisonFmt="pct1" comparisonTitle="MoM" title="Time (hrs)" fmt="#,##0.0"/>
-  {#if elevationSupported}
-  <BigValue data={[selectedWithComparisons]} value="total_elevation_gain_feet" comparison="elevation_change" comparisonFmt="pct1" comparisonTitle="MoM" title="Elevation (ft)" fmt="#,##0"/>
-  {/if}
-  <BigValue data={[selectedWithComparisons]} value="activity_count" comparison="count_change" comparisonFmt="pct1" comparisonTitle="MoM" title="Activity Count" fmt="#,##0"/>
-</div>
+  <div class="monthly-kpis">
+    {#if distanceSupported}
+      <BigValue data={[selectedWithComparisons]} value={distanceMonthlyField} comparison="distance_change"
+                comparisonFmt="pct1" comparisonTitle="MoM" title={distanceMonthlyTitle} fmt="#,##0.0"/>
+    {/if}
+    <BigValue data={[selectedWithComparisons]} value="total_moving_time_hours" comparison="time_change"
+              comparisonFmt="pct1" comparisonTitle="MoM" title="Time (hrs)" fmt="#,##0.0"/>
+    {#if elevationSupported}
+      <BigValue data={[selectedWithComparisons]} value="total_elevation_gain_feet" comparison="elevation_change"
+                comparisonFmt="pct1" comparisonTitle="MoM" title="Elevation (ft)" fmt="#,##0"/>
+    {/if}
+    <BigValue data={[selectedWithComparisons]} value="activity_count" comparison="count_change" comparisonFmt="pct1"
+              comparisonTitle="MoM" title="Activity Count" fmt="#,##0"/>
+  </div>
 {/if}
 
 {#if hasChartData}
-<ECharts
-  on:click={handleMonthlyEvent}
-  on:mouseover={handleMonthlyEvent}
-  data={data}
-  showAllXAxisLabels
-  config={{
+  <ECharts
+      on:click={handleMonthlyEvent}
+      on:mouseover={handleMonthlyEvent}
+      data={data}
+      showAllXAxisLabels
+      config={{
     backgroundColor: 'transparent',
     legend: {
       top: 0,
-      left: 0
+      left: 0,
+      selected: {
+        [distanceSeriesName]: !isIndoor,  // Distance for outdoor activities
+        'Time (hrs)': isIndoor,            // Time for indoor activities
+        'Elevation (ft)': false,
+        'Activity Count': false
+      }
     },
     grid: {
       left: '3%',
@@ -238,5 +258,5 @@
       }
     ]
   }}
-/>
+  />
 {/if}
