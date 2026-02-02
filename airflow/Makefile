@@ -1,4 +1,4 @@
-.PHONY: help build init up down restart logs clean reset credentials trigger refresh-dags trigger-dates
+.PHONY: help trigger
 
 INFRA_COMPOSE_FILE := ../infra/docker-compose.yml
 COMPOSE := docker compose -f $(INFRA_COMPOSE_FILE) --profile airflow

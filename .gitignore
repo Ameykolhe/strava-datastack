@@ -1,9 +1,9 @@
 # ignore secrets, virtual environments, and typical python compilation artifacts
 secrets.toml
 .venv/
+.env
 
 # ignore python generated artifacts
-.env
 **/__pycache__/
 **/*.py[cod]
 **/*$py.class
@@ -31,11 +31,10 @@ transform/logs/
 
 # ignore misc
 .DS_Store
-
 .idea
+.claude/
 
 # ignore evidence
 visualize/node_modules/
-visualize/.evidence/template/
 visualize/.svelte-kit/
-visualize/build/!/airflow/data/strava_datastack.duckdb.backup
+visualize/.evidence/
