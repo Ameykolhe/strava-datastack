@@ -18,12 +18,12 @@ hide_title: true
   $: speedUnit = distanceUnit === 'km' ? 'kph' : 'mph';
 </script>
 
-```sql q_activity_detail__activity
+```sql src_strava_activity_detail
 select * from strava.src_strava__activity_detail
 where activity_id = CAST('${params.activity_id}' AS BIGINT)
 ```
 
-```sql q_activity_detail__hr_zones
+```sql q_hr_zones
 select
     activity_id,
     zone_id,
@@ -39,7 +39,7 @@ where zone_type = 'heartrate'
 order by zone_id
 ```
 
-```sql q_activity_detail__power_zones
+```sql q_power_zones
 select
     activity_id,
     zone_id,
@@ -55,7 +55,7 @@ where zone_type = 'power'
 order by zone_id
 ```
 
-```sql q_activity_detail__pace_zones
+```sql q_pace_zones
 select
     activity_id,
     zone_id,
@@ -71,23 +71,23 @@ where zone_type = 'pace'
 order by zone_id
 ```
 
-{#if q_activity_detail__activity.length > 0}
+{#if src_strava_activity_detail.length > 0}
 
 <ActivityHeader
-activityName={q_activity_detail__activity[0].activity_name}
-startedAt={q_activity_detail__activity[0].started_at}
-timezone={q_activity_detail__activity[0].timezone}
-deviceName={q_activity_detail__activity[0].device_name}
+activityName={src_strava_activity_detail[0].activity_name}
+startedAt={src_strava_activity_detail[0].started_at}
+timezone={src_strava_activity_detail[0].timezone}
+deviceName={src_strava_activity_detail[0].device_name}
 />
 
 {/if}
 
 ## Overview
 
-{#if q_activity_detail__activity.length > 0}
+{#if src_strava_activity_detail.length > 0}
 
 <CoreMetricsGrid
-activity={q_activity_detail__activity[0]}
+activity={src_strava_activity_detail[0]}
 distanceUnit={distanceUnit}
 speedUnit={speedUnit}
 />
@@ -100,16 +100,15 @@ The activity with ID **{params.activity_id}** was not found.
 
 ## Route Map
 
-{#if q_activity_detail__activity.length > 0 && (q_activity_detail__activity[0].polyline || (
-q_activity_detail__activity[0].start_latitude && q_activity_detail__activity[0].start_longitude))}
+{#if src_strava_activity_detail.length > 0 && (src_strava_activity_detail[0].polyline || (src_strava_activity_detail[0].start_latitude && src_strava_activity_detail[0].start_longitude))}
 
-{#if q_activity_detail__activity[0].polyline}
+{#if src_strava_activity_detail[0].polyline}
 <ActivityRouteMap
-polyline={q_activity_detail__activity[0].polyline}
+polyline={src_strava_activity_detail[0].polyline}
 height={400}
 />
 {:else}
-<p>Map data available but no polyline. Start: {q_activity_detail__activity[0].start_latitude}, {q_activity_detail__activity[0].start_longitude}</p>
+<p>Map data available but no polyline. Start: {src_strava_activity_detail[0].start_latitude}, {src_strava_activity_detail[0].start_longitude}</p>
 {/if}
 
 {:else}
@@ -120,33 +119,32 @@ height={400}
 
 ## Details
 
-{#if q_activity_detail__activity.length > 0}
+{#if src_strava_activity_detail.length > 0}
 
 <EngagementStats
-activity={q_activity_detail__activity[0]}
+activity={src_strava_activity_detail[0]}
 />
 
 {/if}
 
 ## Zone Distribution
 
-{#if q_activity_detail__hr_zones.length > 0 || q_activity_detail__power_zones.length > 0 ||
-q_activity_detail__pace_zones.length > 0}
+{#if q_hr_zones.length > 0 || q_power_zones.length > 0 || q_pace_zones.length > 0}
 
 <ZoneDistribution
-zoneData={q_activity_detail__hr_zones}
+zoneData={q_hr_zones}
 zoneType="hr"
 title="Heart Rate Zones"
 />
 
 <ZoneDistribution
-zoneData={q_activity_detail__power_zones}
+zoneData={q_power_zones}
 zoneType="power"
 title="Power Zones"
 />
 
 <ZoneDistribution
-zoneData={q_activity_detail__pace_zones}
+zoneData={q_pace_zones}
 zoneType="pace"
 title="Pace Zones"
 />
