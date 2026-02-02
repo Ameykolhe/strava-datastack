@@ -6,7 +6,12 @@
 
 /*
     Consolidated reporting model for activity streaks across multiple grains.
-    Grain column indicates the aggregation level.
+
+    Grain column indicates the aggregation level:
+    - all: Overall lifetime streaks
+    - year: Yearly streaks (all sports combined)
+    - sport_type: Per-sport lifetime streaks
+    - sport_type_year: Per-sport yearly streaks
 */
 
 with activity_dates as (
@@ -24,6 +29,7 @@ grouped_activity_dates as (
         case
             when grouping(sport_type) = 1 and grouping(activity_year) = 1 then 'all'
             when grouping(sport_type) = 1 and grouping(activity_year) = 0 then 'year'
+            when grouping(sport_type) = 0 and grouping(activity_year) = 1 then 'sport_type'
             else 'sport_type_year'
         end as grain,
         sport_type,
@@ -34,6 +40,7 @@ grouped_activity_dates as (
     group by grouping sets (
         (activity_date),
         (activity_date, activity_year),
+        (activity_date, sport_type, sport_slug),
         (activity_date, sport_type, sport_slug, activity_year)
     )
 ),
@@ -94,7 +101,12 @@ current_streak as (
         sl.sport_type,
         sl.sport_slug,
         sl.activity_year,
-        sl.streak_length as current_streak,
+        -- Only count as current streak if it extends to today or yesterday
+        case
+            when md.max_activity_date >= current_date - interval '1 day'
+                then sl.streak_length
+            else 0
+        end as current_streak,
         sl.streak_start_date,
         sl.streak_end_date
     from streak_lengths sl
@@ -130,7 +142,14 @@ last_30 as (
         and ad.sport_type is not distinct from md.sport_type
         and ad.sport_slug is not distinct from md.sport_slug
         and ad.activity_year is not distinct from md.activity_year
-    where ad.activity_date >= (md.max_activity_date - interval '29 days')
+    where ad.activity_date >= (
+        case
+            -- For non-year grains, use current date as reference
+            when ad.grain in ('all', 'sport_type') then current_date - interval '29 days'
+            -- For year-specific grains, use max activity date
+            else md.max_activity_date - interval '29 days'
+        end
+    )
     group by ad.grain, ad.sport_type, ad.sport_slug, ad.activity_year
 ),
 
@@ -152,11 +171,11 @@ select
     md.sport_slug,
     md.activity_year,
     md.max_activity_date,
-    cs.current_streak,
+    coalesce(cs.current_streak, 0) as current_streak,
     cs.streak_start_date as current_streak_start_date,
     cs.streak_end_date as current_streak_end_date,
-    ls.longest_streak,
-    l30.active_days_last_30,
+    coalesce(ls.longest_streak, 0) as longest_streak,
+    coalesce(l30.active_days_last_30, 0) as active_days_last_30,
     ad.active_days_year
 from max_date md
 left join current_streak cs

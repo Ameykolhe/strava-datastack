@@ -19,35 +19,65 @@ hide_title: true
 </script>
 
 ```sql q_activity_detail__activity
-select * from strava.src_activity_detail__activity
+select * from strava.src_strava__activity_detail
 where activity_id = CAST('${params.activity_id}' AS BIGINT)
 ```
 
 ```sql q_activity_detail__hr_zones
-select * from strava.src_strava__activity_hr_zones
-where activity_id = CAST('${params.activity_id}' AS BIGINT)
+select
+    activity_id,
+    zone_id,
+    zone_name,
+    zone_min_value as zone_min_bpm,
+    zone_max_value as zone_max_bpm,
+    time_seconds,
+    time_minutes,
+    pct_in_zone
+from strava.src_strava__activity_zones
+where zone_type = 'heartrate'
+  and activity_id = CAST('${params.activity_id}' AS BIGINT)
 order by zone_id
 ```
 
 ```sql q_activity_detail__power_zones
-select * from strava.src_strava__activity_power_zones
-where activity_id = CAST('${params.activity_id}' AS BIGINT)
+select
+    activity_id,
+    zone_id,
+    zone_name,
+    zone_min_value as zone_min_watts,
+    zone_max_value as zone_max_watts,
+    time_seconds,
+    time_minutes,
+    pct_in_zone
+from strava.src_strava__activity_zones
+where zone_type = 'power'
+  and activity_id = CAST('${params.activity_id}' AS BIGINT)
 order by zone_id
 ```
 
 ```sql q_activity_detail__pace_zones
-select * from strava.src_strava__activity_pace_zones
-where activity_id = CAST('${params.activity_id}' AS BIGINT)
+select
+    activity_id,
+    zone_id,
+    zone_name,
+    zone_min_value as zone_min_pace,
+    zone_max_value as zone_max_pace,
+    time_seconds,
+    time_minutes,
+    pct_in_zone
+from strava.src_strava__activity_zones
+where zone_type = 'pace'
+  and activity_id = CAST('${params.activity_id}' AS BIGINT)
 order by zone_id
 ```
 
 {#if q_activity_detail__activity.length > 0}
 
 <ActivityHeader
-  activityName={q_activity_detail__activity[0].activity_name}
-  startedAt={q_activity_detail__activity[0].started_at}
-  timezone={q_activity_detail__activity[0].timezone}
-  deviceName={q_activity_detail__activity[0].device_name}
+activityName={q_activity_detail__activity[0].activity_name}
+startedAt={q_activity_detail__activity[0].started_at}
+timezone={q_activity_detail__activity[0].timezone}
+deviceName={q_activity_detail__activity[0].device_name}
 />
 
 {/if}
@@ -57,9 +87,9 @@ order by zone_id
 {#if q_activity_detail__activity.length > 0}
 
 <CoreMetricsGrid
-  activity={q_activity_detail__activity[0]}
-  distanceUnit={distanceUnit}
-  speedUnit={speedUnit}
+activity={q_activity_detail__activity[0]}
+distanceUnit={distanceUnit}
+speedUnit={speedUnit}
 />
 
 {:else}
@@ -70,12 +100,13 @@ The activity with ID **{params.activity_id}** was not found.
 
 ## Route Map
 
-{#if q_activity_detail__activity.length > 0 && (q_activity_detail__activity[0].polyline || (q_activity_detail__activity[0].start_latitude && q_activity_detail__activity[0].start_longitude))}
+{#if q_activity_detail__activity.length > 0 && (q_activity_detail__activity[0].polyline || (
+q_activity_detail__activity[0].start_latitude && q_activity_detail__activity[0].start_longitude))}
 
 {#if q_activity_detail__activity[0].polyline}
 <ActivityRouteMap
-  polyline={q_activity_detail__activity[0].polyline}
-  height={400}
+polyline={q_activity_detail__activity[0].polyline}
+height={400}
 />
 {:else}
 <p>Map data available but no polyline. Start: {q_activity_detail__activity[0].start_latitude}, {q_activity_detail__activity[0].start_longitude}</p>
@@ -92,31 +123,32 @@ The activity with ID **{params.activity_id}** was not found.
 {#if q_activity_detail__activity.length > 0}
 
 <EngagementStats
-  activity={q_activity_detail__activity[0]}
+activity={q_activity_detail__activity[0]}
 />
 
 {/if}
 
 ## Zone Distribution
 
-{#if q_activity_detail__hr_zones.length > 0 || q_activity_detail__power_zones.length > 0 || q_activity_detail__pace_zones.length > 0}
+{#if q_activity_detail__hr_zones.length > 0 || q_activity_detail__power_zones.length > 0 ||
+q_activity_detail__pace_zones.length > 0}
 
 <ZoneDistribution
-  zoneData={q_activity_detail__hr_zones}
-  zoneType="hr"
-  title="Heart Rate Zones"
+zoneData={q_activity_detail__hr_zones}
+zoneType="hr"
+title="Heart Rate Zones"
 />
 
 <ZoneDistribution
-  zoneData={q_activity_detail__power_zones}
-  zoneType="power"
-  title="Power Zones"
+zoneData={q_activity_detail__power_zones}
+zoneType="power"
+title="Power Zones"
 />
 
 <ZoneDistribution
-  zoneData={q_activity_detail__pace_zones}
-  zoneType="pace"
-  title="Pace Zones"
+zoneData={q_activity_detail__pace_zones}
+zoneType="pace"
+title="Pace Zones"
 />
 
 {:else}

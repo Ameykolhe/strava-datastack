@@ -15,26 +15,36 @@
   }
 
   @prop {Array} data - Monthly aggregated activity data
-  @prop {boolean} distanceSupported - Whether distance metrics are available
-  @prop {boolean} elevationSupported - Whether elevation metrics are available
-  @prop {string} distanceMonthlyField - Field name for monthly distance (total_distance_km/miles)
-  @prop {string} distanceSeriesField - Field name for chart series distance
-  @prop {string} distanceSeriesName - Display name for distance series
-  @prop {string} distanceMonthlyTitle - Title for distance KPI
-  @prop {number} minChartPoints - Minimum data points to show chart
+  @prop {number} minChartPoints - Minimum data points to show chart (default: 0)
 -->
 <script>
   import {BigValue, ECharts} from '@evidence-dev/core-components';
   import {pctChange} from '../lib/math.js';
+  import {distanceUnitStore} from '../utils/distanceUnit.js';
 
   export let data = [];
-  export let distanceSupported = true;
-  export let elevationSupported = true;
-  export let distanceMonthlyField = 'total_distance_km';
-  export let distanceSeriesField = 'total_distance_km';
-  export let distanceSeriesName = 'Distance (km)';
-  export let distanceMonthlyTitle = 'Distance (km)';
   export let minChartPoints = 0;
+
+  let distanceUnit = 'km';
+  $: distanceUnit = $distanceUnitStore;
+
+  // Compute distance-related fields based on unit preference
+  $: isKm = distanceUnit === 'km';
+  $: distanceMonthlyField = isKm ? 'total_distance_km' : 'total_distance_miles';
+  $: distanceSeriesField = isKm ? 'total_distance_km' : 'total_distance_miles';
+  $: distanceSeriesName = isKm ? 'Distance (km)' : 'Distance (mi)';
+  $: distanceMonthlyTitle = isKm ? 'Distance (km)' : 'Distance (mi)';
+
+  // Auto-detect feature support from data
+  $: distanceSupported = data?.some(row =>
+      row.total_distance_km != null && row.total_distance_km > 0
+  ) ?? false;
+  $: elevationSupported = data?.some(row =>
+      row.total_elevation_gain_feet != null && row.total_elevation_gain_feet > 0
+  ) ?? false;
+
+  // For indoor activities (no distance), default to showing time
+  $: isIndoor = !distanceSupported;
 
   const WINDOW_MONTHS = 12;
 
@@ -157,7 +167,13 @@
     backgroundColor: 'transparent',
     legend: {
       top: 0,
-      left: 0
+      left: 0,
+      selected: {
+        [distanceSeriesName]: !isIndoor,  // Distance for outdoor activities
+        'Time (hrs)': isIndoor,            // Time for indoor activities
+        'Elevation (ft)': false,
+        'Activity Count': false
+      }
     },
     grid: {
       left: '3%',

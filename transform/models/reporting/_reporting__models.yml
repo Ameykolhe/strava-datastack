@@ -5,6 +5,7 @@ models:
     description: |
       Consolidated reporting model for KPIs across multiple grains.
       Grain column indicates the aggregation level.
+      Includes grains: all, year, day, year_month, sport_type, sport_type_year, sport_type_day, sport_type_year_month.
     columns:
       - name: grain
         description: Aggregation grain identifier
@@ -14,6 +15,8 @@ models:
         description: Lowercase sport slug for routing
       - name: activity_year
         description: Activity year
+      - name: activity_date
+        description: Activity date (populated for day and sport_type_day grains)
       - name: month_start
         description: Month start date
       - name: month_number
@@ -51,79 +54,10 @@ models:
       - name: hardest_elevation_gain_feet
         description: Highest elevation gain in feet
 
-  - name: rpt_activity_list__activity
-    description: |
-      Reporting model for activity lists and activity detail pages.
-      Grain: One row per activity.
-    columns:
-      - name: activity_id
-        description: Activity ID (primary key)
-        tests:
-          - unique
-          - not_null
-      - name: activity_name
-        description: Activity name
-      - name: sport_type
-        description: Sport type classification
-      - name: sport_slug
-        description: Lowercase sport slug for routing
-      - name: workout_type
-        description: Workout type classification
-      - name: started_at
-        description: Activity start timestamp (UTC)
-      - name: started_at_local
-        description: Activity start timestamp (local time)
-      - name: activity_date
-        description: Local activity date
-      - name: activity_year
-        description: Activity year
-      - name: distance_km
-        description: Distance in kilometers
-      - name: distance_miles
-        description: Distance in miles
-      - name: moving_time_seconds
-        description: Moving time in seconds
-      - name: elapsed_time_seconds
-        description: Elapsed time in seconds
-      - name: elevation_gain_feet
-        description: Elevation gain in feet
-      - name: average_speed_mph
-        description: Average speed in miles per hour
-      - name: max_speed_mph
-        description: Max speed in miles per hour
-      - name: pace_min_per_km
-        description: Average pace in minutes per kilometer
-      - name: pace_min_per_mile
-        description: Average pace in minutes per mile
-      - name: average_heartrate_bpm
-        description: Average heart rate in bpm
-      - name: max_heartrate_bpm
-        description: Max heart rate in bpm
-      - name: average_watts
-        description: Average power in watts
-      - name: kilojoules
-        description: Energy expenditure in kilojoules
-      - name: calories_burned
-        description: Energy expenditure in calories
-      - name: kudos_count
-        description: Kudos count
-      - name: comment_count
-        description: Comment count
-      - name: achievement_count
-        description: Achievement count
-      - name: pr_count
-        description: PR count
-      - name: suffer_score
-        description: Strava suffer score
-      - name: map_summary_polyline
-        description: Encoded map polyline
-      - name: activity_link
-        description: Evidence route link for the activity
-
   - name: rpt_activity_detail__activity
     description: |
-      Reporting model for activity detail pages.
-      Provides all fields needed for individual activity view.
+      Consolidated reporting model for both activity lists and activity detail pages.
+      Provides all fields needed for both list views and individual activity detail views.
       Grain: One row per activity.
     columns:
       - name: activity_id
@@ -145,6 +79,16 @@ models:
         description: Activity start timestamp (local time)
       - name: timezone
         description: Timezone identifier
+      - name: activity_date
+        description: Local activity date
+      - name: activity_year
+        description: Activity year
+      - name: activity_month
+        description: Activity month (YYYY-MM format)
+      - name: activity_week
+        description: Activity week (YYYY-WW format)
+      - name: activity_day_of_week
+        description: Day of week name
       - name: location_city
         description: Activity location city
       - name: location_state
@@ -193,6 +137,8 @@ models:
         description: Energy expenditure in calories (derived from kilojoules)
       - name: polyline
         description: Encoded map polyline
+      - name: map_summary_polyline
+        description: Encoded map polyline (alias for list views)
       - name: start_latitude
         description: Start point latitude
       - name: start_longitude
@@ -222,78 +168,24 @@ models:
       - name: activity_link
         description: Evidence route link for the activity
 
-  - name: rpt_activity_hr_zones__activity_zone
+  - name: rpt_activity_zones__activity_zone
     description: |
-      Reporting model for heart rate zone distributions.
-      Grain: One row per activity per zone.
+      Unified reporting model for all activity zone distributions (pace, power, heart rate).
+      Grain: One row per activity per zone per zone_type.
+      Includes pace zones with formatted pace values, power zones with watts, and heart rate zones with bpm.
     tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns:
             - activity_id
+            - zone_type
             - zone_id
     columns:
-      - name: activity_id
-        description: Activity ID
+      - name: zone_type
+        description: Type of zone ('pace', 'power', 'heartrate')
         tests:
           - not_null
-      - name: zone_id
-        description: Zone index (1-based)
-        tests:
-          - not_null
-      - name: zone_name
-        description: Zone display name
-      - name: zone_min_bpm
-        description: Minimum bpm for zone
-      - name: zone_max_bpm
-        description: Maximum bpm for zone
-      - name: time_seconds
-        description: Time spent in zone (seconds)
-      - name: time_minutes
-        description: Time spent in zone (minutes)
-      - name: pct_in_zone
-        description: Percent of time spent in zone
-
-  - name: rpt_activity_power_zones__activity_zone
-    description: |
-      Reporting model for power zone distributions.
-      Grain: One row per activity per zone.
-    tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - activity_id
-            - zone_id
-    columns:
-      - name: activity_id
-        description: Activity ID
-        tests:
-          - not_null
-      - name: zone_id
-        description: Zone index (1-based)
-        tests:
-          - not_null
-      - name: zone_name
-        description: Zone display name
-      - name: zone_min_watts
-        description: Minimum watts for zone
-      - name: zone_max_watts
-        description: Maximum watts for zone
-      - name: time_seconds
-        description: Time spent in zone (seconds)
-      - name: time_minutes
-        description: Time spent in zone (minutes)
-      - name: pct_in_zone
-        description: Percent of time spent in zone
-
-  - name: rpt_activity_pace_zones__activity_zone
-    description: |
-      Reporting model for pace zone distributions.
-      Grain: One row per activity per zone.
-    tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - activity_id
-            - zone_id
-    columns:
+          - accepted_values:
+              values: ['pace', 'power', 'heartrate']
       - name: activity_id
         description: Activity ID
         tests:
@@ -305,13 +197,17 @@ models:
       - name: zone_name
         description: Zone display name
       - name: zone_min_pace
-        description: Minimum pace for zone (mm:ss)
+        description: Minimum pace for zone in mm:ss format (pace zones only)
       - name: zone_max_pace
-        description: Maximum pace for zone (mm:ss)
+        description: Maximum pace for zone in mm:ss format (pace zones only)
       - name: zone_min_pace_sec
-        description: Minimum pace for zone (seconds)
+        description: Minimum pace for zone in seconds (pace zones only)
       - name: zone_max_pace_sec
-        description: Maximum pace for zone (seconds)
+        description: Maximum pace for zone in seconds (pace zones only)
+      - name: zone_min_value
+        description: Minimum value for zone (watts for power, bpm for heartrate, null for pace)
+      - name: zone_max_value
+        description: Maximum value for zone (watts for power, bpm for heartrate, null for pace)
       - name: time_seconds
         description: Time spent in zone (seconds)
       - name: time_minutes
@@ -346,68 +242,3 @@ models:
         description: Active days in the last 30 days
       - name: active_days_year
         description: Active days in the year
-
-  - name: rpt_home_daily_trends__day
-    description: |
-      Reporting model for daily activity trends.
-      Grain: One row per activity_date.
-    columns:
-      - name: activity_date
-        description: Local activity date
-        tests:
-          - unique
-          - not_null
-      - name: activity_year
-        description: Activity year
-      - name: activity_count
-        description: Count of activities on the date
-
-  - name: rpt_activity_daily_trends__sport_type_day
-    description: |
-      Reporting model for daily activity trends by sport type.
-      Grain: One row per sport_type per activity_date.
-    tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - sport_type
-            - activity_date
-    columns:
-      - name: sport_type
-        description: Sport type classification
-      - name: sport_slug
-        description: Lowercase sport slug for routing
-      - name: activity_date
-        description: Local activity date
-      - name: activity_year
-        description: Activity year
-      - name: activity_count
-        description: Count of activities on the date
-
-  - name: rpt_distinct_years__year
-    description: |
-      Reporting model for distinct activity years.
-      Grain: One row per activity_year.
-    columns:
-      - name: activity_year
-        description: Activity year
-        tests:
-          - unique
-          - not_null
-      - name: max_year
-        description: Max activity year across the dataset
-
-
-  - name: rpt_year_routes__year
-    description: |
-      Reporting model for yearly route polylines.
-      Grain: One row per activity_year.
-    columns:
-      - name: activity_year
-        description: Activity year
-        tests:
-          - unique
-          - not_null
-      - name: polylines
-        description: List of activity summary polylines
-      - name: polylines_json
-        description: JSON-encoded list of activity summary polylines
