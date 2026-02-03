@@ -12,10 +12,10 @@ visualizes insights through Evidence.dev dashboards.
 └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
                           │                  │                  │
                           ▼                  ▼                  ▼
-                   ┌─────────────────────────────────────────────────┐
-                   │                    DuckDB                        │
-                   │  strava_datastack.duckdb │ strava_reporting.duckdb│
-                   └─────────────────────────────────────────────────┘
+                   ┌─────────────────────────────────────────────────────┐
+                   │                        DuckDB                       │
+                   │  strava_datastack.duckdb │ strava_reporting.duckdb  │
+                   └─────────────────────────────────────────────────────┘
 ```
 
 ## Tech Stack
@@ -143,8 +143,8 @@ Open http://localhost:3000 to view your Strava analytics.
 | Grafana    | http://localhost:3000  | Metrics and log dashboards        |
 | Jaeger     | http://localhost:16686 | Distributed tracing UI            |
 | Prometheus | http://localhost:9090  | Metrics storage and queries       |
-| Marquez    | http://localhost:3001  | Data lineage UI                   |
-| Evidence   | http://localhost:3000  | Analytics dashboards (dev server) |
+| Marquez    | http://localhost:3200  | Data lineage UI                   |
+| Evidence   | http://localhost:4000  | Analytics dashboards (dev server) |
 | Flower     | http://localhost:5555  | Celery worker monitoring          |
 
 ## Subproject Documentation
@@ -154,7 +154,3 @@ Open http://localhost:3000 to view your Strava analytics.
 - [Visualize Dashboards](./visualize/README.md) - Evidence.dev analytics
 - [Airflow DAGs](./airflow/README.md) - Orchestration and operators
 - [Infrastructure](./infra/README.md) - Docker Compose services
-
-## License
-
-MIT

@@ -2,6 +2,22 @@
 
 Apache Airflow 3.x services with CeleryExecutor for the Strava data pipeline.
 
+## Setup
+
+1. Copy the environment template:
+
+```bash
+cp .env.example .env
+```
+
+2. Generate a Fernet key for encryption:
+
+```bash
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+3. Update `.env` with the generated Fernet key and any custom credentials.
+
 ## Services
 
 | Service                 | Port | Description                          |

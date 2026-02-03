@@ -7,7 +7,7 @@
 | Service       | Port       | Image                               | Description                 |
 |---------------|------------|-------------------------------------|-----------------------------|
 | `marquez`     | 5000, 5001 | `marquezproject/marquez:0.51.1`     | Lineage API server          |
-| `marquez-web` | 3001       | `marquezproject/marquez-web:0.51.1` | Web UI                      |
+| `marquez-web` | 3200       | `marquezproject/marquez-web:0.51.1` | Web UI                      |
 | `marquez-db`  | -          | `postgres:16`                       | PostgreSQL metadata storage |
 
 ## Architecture
@@ -21,13 +21,13 @@
                                                          │
 ┌─────────────────┐                             ┌────────▼─────────┐
 │   dbt (Cosmos)  │ ──────────────────────────► │   Marquez Web    │
-│                 │                             │   (UI: 3001)     │
+│                 │                             │   (UI: 3100)     │
 └─────────────────┘                             └──────────────────┘
 ```
 
 ## Accessing the UI
 
-- URL: http://localhost:3001
+- URL: http://localhost:3200
 - No authentication required (development mode)
 
 ### Features
@@ -38,6 +38,12 @@
 - **Run Metadata**: Inspect run-level details and facets
 
 ## Configuration
+
+Copy `.env.example` to `.env` to configure credentials:
+
+```bash
+cp .env.example .env
+```
 
 ### Environment Variables
 
@@ -95,10 +101,9 @@ The pipeline emits standard OpenLineage events:
 
 ## Viewing Lineage
 
-1. Open http://localhost:3001
-2. Select namespace: `strava-datastack`
-3. Browse datasets or jobs
-4. Click a node to view its lineage graph
+1. Open http://localhost:3200
+2. Browse datasets or jobs
+3. Click a node to view its lineage graph
 
 ### Example Lineage
 

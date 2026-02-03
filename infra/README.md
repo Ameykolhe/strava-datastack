@@ -87,8 +87,22 @@ docker compose --profile airflow up -d
 | Grafana    | http://localhost:3000  | Observability dashboards |
 | Jaeger     | http://localhost:16686 | Distributed tracing      |
 | Prometheus | http://localhost:9090  | Metrics queries          |
-| Marquez    | http://localhost:3001  | Data lineage UI          |
+| Marquez    | http://localhost:3200  | Data lineage UI          |
 | Flower     | http://localhost:5555  | Celery monitoring        |
+
+## Environment Configuration
+
+Copy `.env.example` to `.env` and configure as needed:
+
+```bash
+cp .env.example .env
+```
+
+| Variable             | Description                               | Default       |
+|----------------------|-------------------------------------------|---------------|
+| `STRAVA_ENVIRONMENT` | Environment name (production/development) | `development` |
+
+Each subdirectory has its own `.env.example` with service-specific configuration.
 
 ## Subdirectory Documentation
 

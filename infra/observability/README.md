@@ -168,6 +168,19 @@ transform/logs:
 
 This enables clicking from logs to traces in Grafana.
 
+## Environment Variables
+
+Copy `.env.example` to `.env` to configure credentials:
+
+```bash
+cp .env.example .env
+```
+
+| Variable                 | Description            | Default |
+|--------------------------|------------------------|---------|
+| `GRAFANA_ADMIN_USER`     | Grafana admin username | `admin` |
+| `GRAFANA_ADMIN_PASSWORD` | Grafana admin password | `admin` |
+
 ## Data Retention
 
 | Service       | Retention    | Configuration                       |

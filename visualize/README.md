@@ -20,6 +20,12 @@ make install  # npm install
 
 ## Configuration
 
+Copy `.env.example` to `.env` to configure the data source path:
+
+```bash
+cp .env.example .env
+```
+
 ### Data Source
 
 The dashboard connects to the reporting DuckDB database:
