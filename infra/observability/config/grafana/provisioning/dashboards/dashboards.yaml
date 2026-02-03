@@ -6,13 +6,13 @@
 apiVersion: 1
 
 providers:
-  - name: 'default'
+  - name: 'strava-datastack'
     orgId: 1
-    folder: ''
-    folderUid: ''
+    folder: 'Strava Datastack'
+    folderUid: 'strava-datastack'
     type: file
     disableDeletion: false
     updateIntervalSeconds: 30
     allowUiUpdates: true
     options:
-      path: /var/lib/grafana/dashboards
+      path: /etc/grafana/provisioning/dashboards/json

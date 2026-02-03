@@ -11,35 +11,39 @@ datasources:
     type: prometheus
     access: proxy
     url: http://prometheus:9090
+    uid: prometheus
     isDefault: true
     editable: false
     jsonData:
       httpMethod: POST
       manageAlerts: true
       prometheusType: Prometheus
-      prometheusVersion: 2.x
 
   # Jaeger - Traces
   - name: Jaeger
     type: jaeger
     access: proxy
     url: http://jaeger:16686
+    uid: jaeger
     editable: false
     jsonData:
-      tracesToLogs:
-        datasourceUid: loki
-        spanStartTimeShift: '-1h'
-        spanEndTimeShift: '1h'
-        filterByTraceID: false
-        filterBySpanID: false
-        customQuery: '{span_id="${__span.spanId}"}'
       tracesToLogsV2:
         datasourceUid: loki
         spanStartTimeShift: '-1h'
         spanEndTimeShift: '1h'
-        filterByTraceID: false
-        filterBySpanID: false
-        customQuery: '{span_id="${__span.spanId}"}'
+        filterByTraceID: true
+        filterBySpanID: true
+        customQuery: true
+        query: '{job="airflow"} | json | trace_id=`${__span.traceId}`'
+      tracesToMetrics:
+        datasourceUid: prometheus
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        tags:
+          - key: service.name
+            value: service
+      nodeGraph:
+        enabled: true
 
   # Loki - Logs
   - name: Loki
@@ -49,9 +53,17 @@ datasources:
     uid: loki
     editable: false
     jsonData:
+      maxLines: 1000
       derivedFields:
+        # Extract trace_id from JSON logs and link to Jaeger
         - name: TraceID
-          matcherRegex: 'trace_id["=: ]+"?([a-f0-9]{32})"?'
+          matcherRegex: '"trace_id"\\s*:\\s*"([a-f0-9]{32})"'
+          url: '$${__value.raw}'
+          datasourceUid: jaeger
+          urlDisplayLabel: 'View Trace'
+        # Also match trace_id in fields format
+        - name: TraceID_Fields
+          matcherRegex: 'trace_id=([a-f0-9]{32})'
           url: '$${__value.raw}'
           datasourceUid: jaeger
           urlDisplayLabel: 'View Trace'

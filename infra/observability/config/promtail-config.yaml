@@ -21,8 +21,12 @@ scrape_configs:
           job: airflow
           __path__: /var/log/airflow/**/*.log
     pipeline_stages:
+      # Extract fields from JSON logs
       - json:
           expressions:
+            level: level
+            event: event
+            logger: logger
             trace_id: trace_id
             span_id: span_id
             trace_flags: trace_flags
@@ -36,13 +40,19 @@ scrape_configs:
             dlt_dataset_name: dlt_dataset_name
             dlt_destination: dlt_destination
             dlt_load_id: dlt_load_id
+            filename: filename
+            lineno: lineno
+      # Fallback regex extraction for trace context
       - regex:
-          expression: 'trace_id[=: ]+(?P<trace_id>[a-f0-9]{32})'
+          expression: '"trace_id"\s*:\s*"(?P<trace_id>[a-f0-9]{32})"'
       - regex:
-          expression: 'span_id[=: ]+(?P<span_id>[a-f0-9]{16})'
+          expression: '"span_id"\s*:\s*"(?P<span_id>[a-f0-9]{16})"'
       - regex:
-          expression: 'trace_flags[=: ]+(?P<trace_flags>[a-f0-9]{2})'
+          expression: '"trace_flags"\s*:\s*"(?P<trace_flags>[a-f0-9]{2})"'
+      # Promote extracted fields to labels for efficient querying
       - labels:
+          level:
+          logger:
           trace_id:
           span_id:
           trace_flags:
