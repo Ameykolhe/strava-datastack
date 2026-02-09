@@ -50,7 +50,7 @@ select
 from strava.src_strava__kpis
 where grain = 'sport_type_year'
   and activity_year in (${params.year}, ${params.year} - 1)
-  and sport_slug = '${params.sport}'
+  and lower(coalesce(sport_slug, sport_type)) = lower('${params.sport}')
 ```
 
 ```sql q_year_sport__streaks
@@ -64,7 +64,7 @@ select
 from strava.src_strava__streaks
 where grain = 'sport_type_year'
   and activity_year = ${params.year}
-  and sport_slug = '${params.sport}'
+  and lower(coalesce(sport_slug, sport_type)) = lower('${params.sport}')
 ```
 
 ```sql q_year_sport__kpis_year_month
@@ -80,7 +80,7 @@ select
 from strava.src_strava__kpis
 where grain = 'sport_type_year_month'
   and activity_year = ${params.year}
-  and sport_slug = '${params.sport}'
+  and lower(coalesce(sport_slug, sport_type)) = lower('${params.sport}')
 order by month_start
 ```
 
@@ -91,7 +91,7 @@ select
 from strava.src_strava__kpis
 where grain = 'sport_type_day'
   and activity_year = ${params.year}
-  and sport_slug = '${params.sport}'
+  and lower(coalesce(sport_slug, sport_type)) = lower('${params.sport}')
 order by activity_date
 ```
 
@@ -101,7 +101,7 @@ select activity_id,
        started_at,
        distance_km,
        distance_miles,
-       moving_time_minutes,
+       moving_time_display,
        elevation_gain_feet,
        average_speed_kph,
        pace_min_per_km,
@@ -110,7 +110,7 @@ select activity_id,
        activity_link
 from strava.src_strava__activity_detail
 where activity_year = ${params.year}
-  and sport_slug = '${params.sport}'
+  and lower(coalesce(sport_slug, sport_type)) = lower('${params.sport}')
 order by started_at desc
 ```
 

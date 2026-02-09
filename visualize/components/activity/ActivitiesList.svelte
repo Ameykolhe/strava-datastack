@@ -10,7 +10,7 @@
     started_at: Date/string,
     distance_km: number,
     distance_miles: number,
-    moving_time_minutes: number,
+    moving_time_display: string,
     elevation_gain_feet: number,
     average_speed_kph: number,
     pace_min_per_km: number,
@@ -71,7 +71,7 @@
   {#if distanceSupported}
     <Column id=distance_display title={`Distance (${distanceUnitLabel})`}/>
   {/if}
-  <Column id=moving_time_minutes title="Duration (min)"/>
+  <Column id=moving_time_display title="Duration"/>
   {#if elevationSupported}
     <Column id=elevation_gain_feet title="Elevation (ft)"/>
   {/if}

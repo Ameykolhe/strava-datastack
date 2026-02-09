@@ -54,17 +54,15 @@
 
     <BigValue
         data={[activity]}
-        value='moving_time_minutes'
-        title="Moving Time (min)"
-        fmt='#,##0.0'
+        value='moving_time_display'
+        title="Moving Time"
     />
 
     {#if showElapsedTime}
       <BigValue
           data={[activity]}
-          value='elapsed_time_minutes'
-          title="Elapsed Time (min)"
-          fmt='#,##0.0'
+          value='elapsed_time_display'
+          title="Elapsed Time"
       />
     {/if}
 

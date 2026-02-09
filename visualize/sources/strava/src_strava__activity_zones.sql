@@ -8,6 +8,7 @@ select
     zone_min_value,
     zone_max_value,
     time_seconds,
+    time_display,
     time_minutes,
     pct_in_zone
 from dbt_sandbox_reporting.rpt_activity_zones__activity_zone
