@@ -257,6 +257,7 @@ select
     round(total_distance_km, 1) as total_distance_km,
     round(total_distance_miles, 1) as total_distance_miles,
     round(total_moving_time_hours, 1) as total_moving_time_hours,
+    {{ seconds_to_time_display('total_moving_time_seconds') }} as time_display,
     round(total_elevation_gain_feet, 0) as total_elevation_gain_feet,
     -- Average speed: miles per hour
     case

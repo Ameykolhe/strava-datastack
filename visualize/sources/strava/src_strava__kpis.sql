@@ -14,6 +14,7 @@ select
     total_distance_km,
     total_distance_miles,
     total_moving_time_hours,
+    time_display,
     total_elevation_gain_feet,
     avg_speed_mph,
     avg_speed_kmh,
