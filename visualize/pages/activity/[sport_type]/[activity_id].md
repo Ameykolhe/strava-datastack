@@ -9,6 +9,8 @@ hide_title: true
   import EngagementStats from '../../../../components/activity/detail/EngagementStats.svelte';
   import ActivityRouteMap from '../../../../components/activity/ActivityRouteMap.svelte';
   import ZoneDistribution from '../../../../components/activity/detail/ZoneDistribution.svelte';
+  import CombinedPerformanceChart from '../../../../components/activity/detail/CombinedPerformanceChart.svelte';
+  import SegmentEffortsTable from '../../../../components/activity/detail/SegmentEffortsTable.svelte';
   import { distanceUnitStore } from '../../../../components/utils/distanceUnit.js';
 
   let distanceUnit = 'km';
@@ -69,6 +71,20 @@ from strava.src_strava__activity_zones
 where zone_type = 'pace'
   and activity_id = CAST('${params.activity_id}' AS BIGINT)
 order by zone_id
+```
+
+```sql q_stream_bins
+select *
+from strava.src_strava__activity_stream_bins
+where activity_id = CAST('${params.activity_id}' AS BIGINT)
+order by bin_index
+```
+
+```sql q_segment_efforts
+select *
+from strava.src_strava__activity_segment_efforts
+where activity_id = CAST('${params.activity_id}' AS BIGINT)
+order by start_index
 ```
 
 {#if src_strava_activity_detail.length > 0}
@@ -154,3 +170,19 @@ title="Pace Zones"
 <p><em>No zone data available for this activity.</em></p>
 
 {/if}
+
+## Performance Overview
+
+<CombinedPerformanceChart
+streamData={q_stream_bins}
+distanceUnit={distanceUnit}
+sportType={src_strava_activity_detail?.[0]?.sport_type}
+/>
+
+## Segment Efforts
+
+<SegmentEffortsTable
+efforts={q_segment_efforts}
+distanceUnit={distanceUnit}
+speedUnit={speedUnit}
+/>
