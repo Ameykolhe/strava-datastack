@@ -52,7 +52,7 @@ services:
       MARQUEZ_PORT: 5000
       WEB_PORT: 3000
     ports:
-      - "3001:3000"
+      - "3200:3000"
     depends_on:
       marquez:
         condition: service_healthy

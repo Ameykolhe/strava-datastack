@@ -75,7 +75,7 @@ select activity_id,
        started_at,
        distance_km,
        distance_miles,
-       moving_time_minutes,
+       moving_time_display,
        average_speed_mph,
        pace_min_per_km,
        activity_link

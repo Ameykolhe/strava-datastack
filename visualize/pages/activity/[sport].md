@@ -32,7 +32,7 @@ select sport_type,
        avg_pace_min_per_km
 from strava.src_strava__kpis
 where grain = 'sport_type'
-  and sport_slug = '${params.sport}'
+  and lower(coalesce(sport_slug, sport_type)) = lower('${params.sport}')
 ```
 
 ```sql q_activity_sport__kpis_month
@@ -46,7 +46,7 @@ select month_start,
        avg_heartrate_bpm
 from strava.src_strava__kpis
 where grain = 'sport_type_year_month'
-  and sport_slug = '${params.sport}'
+  and lower(coalesce(sport_slug, sport_type)) = lower('${params.sport}')
 order by month_start
 ```
 
@@ -56,7 +56,7 @@ select current_streak,
        active_days_last_30
 from strava.src_strava__streaks
 where grain = 'sport_type'
-  and sport_slug = '${params.sport}'
+  and lower(coalesce(sport_slug, sport_type)) = lower('${params.sport}')
 ```
 
 ```sql q_activity_sport__activities
@@ -65,7 +65,7 @@ select activity_id,
        started_at,
        distance_km,
        distance_miles,
-       moving_time_minutes,
+       moving_time_display,
        elevation_gain_feet,
        average_speed_kph,
        pace_min_per_km,
@@ -73,7 +73,7 @@ select activity_id,
        average_watts,
        activity_link
 from strava.src_strava__activity_detail
-where sport_slug = '${params.sport}'
+where lower(coalesce(sport_slug, sport_type)) = lower('${params.sport}')
 order by started_at desc
 ```
 

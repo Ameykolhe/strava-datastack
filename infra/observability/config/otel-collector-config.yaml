@@ -46,8 +46,11 @@ processors:
     log_statements:
       - context: log
         statements:
+          # Copy trace context to attributes for Loki label promotion
           - set(attributes["trace_id"], trace_id)
           - set(attributes["span_id"], span_id)
+          # Hint to Loki exporter: promote these attributes to Loki labels
+          - set(attributes["loki.attribute.labels"], "trace_id, span_id")
 
 exporters:
   # Export traces to Jaeger

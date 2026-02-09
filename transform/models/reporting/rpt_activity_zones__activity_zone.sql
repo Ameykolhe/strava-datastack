@@ -225,6 +225,7 @@ select
     zone_max_value,
     -- Common columns
     time_seconds,
+    {{ seconds_to_time_display('time_seconds') }} as time_display,
     time_minutes,
     pct_in_zone
 from combined
