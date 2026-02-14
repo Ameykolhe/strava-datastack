@@ -1,0 +1,9 @@
+.git
+infra/airflow/logs
+infra/observability
+infra/lineage
+node_modules
+visualize/node_modules
+visualize/.svelte-kit
+visualize/build
+visualize/.evidence/template
