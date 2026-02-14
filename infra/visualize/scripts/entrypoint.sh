@@ -6,7 +6,7 @@ if [ ! -f /etc/nginx/certs/server.crt ] || [ ! -f /etc/nginx/certs/server.key ];
     -keyout /etc/nginx/certs/server.key \
     -out /etc/nginx/certs/server.crt \
     -subj "/CN=localhost" \
-    -addext "subjectAltName=DNS:localhost"
+    -addext "subjectAltName=DNS:localhost" || { echo "Error: failed to generate self-signed TLS certificates with openssl."; exit 1; }
 fi
 
 exec nginx -g 'daemon off;'
