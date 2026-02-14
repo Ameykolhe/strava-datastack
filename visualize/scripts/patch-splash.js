@@ -19,8 +19,9 @@
 
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const BUILD_DIR = new URL('../build', import.meta.url).pathname;
+const BUILD_DIR = fileURLToPath(new URL('../build/', import.meta.url));
 
 const SPLASH_RE =
 	/(\s*)(<!-- SplashScreen -->[\s\S]*?<div\s[^>]*id="__evidence_project_splash"[\s\S]*?<\/div>)/g;
