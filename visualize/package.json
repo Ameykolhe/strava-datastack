@@ -5,12 +5,12 @@
     "dev": "evidence dev --open / --port 4000",
     "sources": "evidence sources",
     "sources:strict": "evidence sources --strict",
-    "build": "VITE_EVIDENCE_SPA=true evidence build",
+    "build": "VITE_EVIDENCE_SPA=true evidence build && node scripts/patch-splash.js",
     "preview": "VITE_EVIDENCE_SPA=true evidence preview"
   },
   "engines": {
     "npm": ">=7.0.0",
-    "node": ">=18.0.0"
+    "node": ">=20.10.0"
   },
   "type": "module",
   "dependencies": {

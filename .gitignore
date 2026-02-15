@@ -38,3 +38,4 @@ transform/logs/
 visualize/node_modules/
 visualize/.svelte-kit/
 visualize/.evidence/
+/infra/visualize/certs/
