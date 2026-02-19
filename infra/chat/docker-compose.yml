@@ -1,0 +1,51 @@
+services:
+  chat-api:
+    build:
+      context: ../../chat
+      dockerfile: docker/Dockerfile.api
+    ports:
+      - "3001:3001"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - JWT_SECRET=${CHAT_JWT_SECRET}
+      - CHAT_PASSWORD_HASH=${CHAT_PASSWORD_HASH}
+      - DUCKDB_REPORTING_PATH=/data/strava_reporting.duckdb
+      - CHAT_DB_PATH=/data/chat.sqlite
+      - CHAT_API_PORT=3001
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+    volumes:
+      - ../airflow/data/strava_reporting.duckdb:/data/strava_reporting.duckdb:ro
+      - chat-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - strava-infra
+    profiles:
+      - chat
+
+  chat-ui:
+    build:
+      context: ../../chat
+      dockerfile: docker/Dockerfile.ui
+    ports:
+      - "3002:3002"
+    environment:
+      - PUBLIC_API_URL=http://localhost:3001
+    depends_on:
+      chat-api:
+        condition: service_healthy
+    networks:
+      - strava-infra
+    profiles:
+      - chat
+
+volumes:
+  chat-data:
+
+networks:
+  strava-infra:
+    external: true

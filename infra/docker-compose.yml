@@ -6,6 +6,7 @@ include:
   - path: ./lineage/docker-compose.yml
   - path: ./strava-infra/docker-compose.yml
   - path: ./visualize/docker-compose.yml
+  - path: ./chat/docker-compose.yml
 
 networks:
   strava-infra:

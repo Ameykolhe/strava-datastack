@@ -1,0 +1,29 @@
+FROM node:22-slim AS base
+WORKDIR /app
+
+# Install dependencies
+COPY package.json package-lock.json* ./
+COPY packages/shared/package.json packages/shared/
+COPY packages/chat-ui/package.json packages/chat-ui/
+RUN npm ci --ignore-scripts
+
+# Build shared types
+COPY tsconfig.base.json ./
+COPY packages/shared/ packages/shared/
+RUN npm run build -w packages/shared
+
+# Build SvelteKit app
+COPY packages/chat-ui/ packages/chat-ui/
+RUN npm run build -w packages/chat-ui
+
+# Production stage
+FROM node:22-slim
+WORKDIR /app
+
+COPY --from=base /app/packages/chat-ui/build ./build
+COPY --from=base /app/packages/chat-ui/package.json ./
+COPY --from=base /app/node_modules ./node_modules
+
+EXPOSE 3002
+ENV PORT=3002
+CMD ["node", "build"]
