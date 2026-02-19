@@ -160,7 +160,7 @@ export async function registerConversationRoutes(
             // Hijack response for SSE
             reply.hijack();
             const res = reply.raw;
-            initSseResponse(res);
+            initSseResponse(res, config.CHAT_UI_ORIGIN);
 
             const heartbeat = startHeartbeat(res);
 

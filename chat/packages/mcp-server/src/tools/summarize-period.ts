@@ -55,7 +55,7 @@ async function summarizeYear(
            total_moving_time_hours, total_elevation_gain_feet,
            avg_speed_mph, avg_pace_min_per_km, avg_heartrate_bpm,
            longest_distance_miles
-    FROM reporting.rpt_kpis__all
+    FROM dbt_sandbox_reporting.rpt_kpis__all
     WHERE ${conditions.join(" AND ")}
   `;
 
@@ -91,7 +91,7 @@ async function summarizeMonth(
            total_moving_time_hours, total_elevation_gain_feet,
            avg_speed_mph, avg_pace_min_per_km, avg_heartrate_bpm,
            longest_distance_miles
-    FROM reporting.rpt_kpis__all
+    FROM dbt_sandbox_reporting.rpt_kpis__all
     WHERE ${conditions.join(" AND ")}
   `;
 
@@ -161,7 +161,7 @@ async function summarizeWeek(
       ROUND(AVG(avg_pace_min_per_km), 2) AS avg_pace_min_per_km,
       ROUND(AVG(avg_heartrate_bpm), 0) AS avg_heartrate_bpm,
       MAX(longest_distance_miles) AS longest_distance_miles
-    FROM reporting.rpt_kpis__all
+    FROM dbt_sandbox_reporting.rpt_kpis__all
     WHERE ${conditions.join(" AND ")}
   `;
 

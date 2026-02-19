@@ -42,7 +42,7 @@ export async function queryKpis(rawInput: unknown): Promise<QueryResult> {
       total_moving_time_hours, time_display, total_elevation_gain_feet,
       avg_speed_mph, avg_speed_kmh, avg_pace_min_per_km,
       avg_heartrate_bpm, longest_distance_miles, hardest_elevation_gain_feet
-    FROM reporting.rpt_kpis__all
+    FROM dbt_sandbox_reporting.rpt_kpis__all
     WHERE ${conditions.join(" AND ")}
     ORDER BY activity_year, activity_date, month_start
   `;

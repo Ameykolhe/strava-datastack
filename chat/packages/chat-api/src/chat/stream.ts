@@ -2,7 +2,15 @@ import type { IncomingMessage, ServerResponse } from "http";
 import type { StreamEvent } from "@strava-chat/shared/types";
 import { SSE_HEARTBEAT_MS } from "@strava-chat/shared/constants";
 
-export function initSseResponse(res: ServerResponse<IncomingMessage>): void {
+export function initSseResponse(
+    res: ServerResponse<IncomingMessage>,
+    allowedOrigin?: string,
+): void {
+    // CORS headers must be set manually because reply.hijack() bypasses @fastify/cors
+    if (allowedOrigin) {
+        res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+        res.setHeader("Access-Control-Allow-Credentials", "true");
+    }
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
