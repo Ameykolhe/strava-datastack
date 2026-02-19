@@ -7,7 +7,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx --watch src/index.ts",
+    "dev": "tsx --env-file=../../.env --watch src/index.ts",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "openai": "^4.77.0",
     "@modelcontextprotocol/sdk": "^1.12.0",
     "@strava-chat/shared": "*",
     "better-sqlite3": "^11.8.0",
