@@ -147,6 +147,13 @@ Open http://localhost:3000 to view your Strava analytics.
 | Evidence   | http://localhost:4000  | Analytics dashboards (dev server) |
 | Flower     | http://localhost:5555  | Celery worker monitoring          |
 
+## TODO
+
+- [ ] AWS S3 for reporting DB and syncing Netlify deploys from S3
+- [ ] MCP server for accessing fact and dimension models
+- [ ] Backend API for chat application
+- [ ] Separate frontend / integrate chat application with Evidence (local/Docker only)
+
 ## Subproject Documentation
 
 - [Extract Pipeline](./extract/README.md) - Strava API extraction with dlt

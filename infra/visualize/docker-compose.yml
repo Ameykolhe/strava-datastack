@@ -1,0 +1,19 @@
+services:
+  visualize:
+    profiles:
+      - visualize
+    build:
+      context: ../../
+      dockerfile: infra/visualize/Dockerfile
+    ports:
+      - "443:443"
+    volumes:
+      - ./certs:/etc/nginx/certs
+    networks:
+      - strava-infra
+    restart: always
+
+networks:
+  strava-infra:
+    name: strava-infra
+    external: true

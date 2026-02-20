@@ -38,3 +38,11 @@ transform/logs/
 visualize/node_modules/
 visualize/.svelte-kit/
 visualize/.evidence/
+/infra/visualize/certs/
+
+# ignore node
+node_modules/
+.svelte-kit/
+
+#ignore chat data
+chat/packages/chat-api/data/
